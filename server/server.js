@@ -1,0 +1,65 @@
+import dotenv from "dotenv";
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import compression from "compression";
+import mongoSanitize from "express-mongo-sanitize";
+
+import connectDB from "./config/db.js";
+import authRoutes from "./routes/authRoutes.js";
+import productRoutes from "./routes/ProductRoutes.js"
+import userRoutes from "./routes/UserRoutes.js";
+import cartRoutes from "./routes/cartRoutes.js";
+import OrderRoutes from "./routes/OrderRoutes.js";
+import errorHandler from "./middleware/errorMiddleware.js";
+import wishlistRoutes from "./routes/wishlistRoutes.js";
+
+dotenv.config();
+
+
+const app = express();
+connectDB();
+
+// Global middlewares
+app.use(helmet());
+app.use(
+    rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        max: 100,
+        message: "Too many requests, try later.",
+    })
+);
+app.use(cors()); // you can restrict origin: { origin: "https://yourfrontend.com" }
+app.use(express.json());
+app.use(compression());
+// app.use(mongoSanitize({ replaceWith: '_' }));
+app.use(mongoSanitize({
+    allowDots: true,
+    replaceWith: '_',
+    dryRun: true, // <-- this prevents it from actually modifying anything
+}));
+
+// Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/order", OrderRoutes);
+app.use("/api/wishlist", wishlistRoutes);
+
+app.use((req, res, next) => {
+    res.status(404);
+    next(new Error(`Not Found - ${req.originalUrl}`));
+});
+
+// app.use((err, req, res, next) => {
+//     console.error("Error:", err.message);
+//     res.status(500).json({ error: err.message });
+// });
+
+// Error handler (last)
+app.use(errorHandler);
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
