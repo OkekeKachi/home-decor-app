@@ -14,6 +14,9 @@ import cartRoutes from "./routes/cartRoutes.js";
 import OrderRoutes from "./routes/OrderRoutes.js";
 import errorHandler from "./middleware/errorMiddleware.js";
 import wishlistRoutes from "./routes/wishlistRoutes.js";
+import NotificationRoutes from "./routes/NotificationRoutes.js";
+import reviewRoutes from "./routes/reviewRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 
 dotenv.config();
 
@@ -30,14 +33,18 @@ app.use(
         message: "Too many requests, try later.",
     })
 );
-app.use(cors()); // you can restrict origin: { origin: "https://yourfrontend.com" }
+
+app.use(cors({
+    origin: "http://localhost:3000", // frontend URL
+    credentials: true
+}));
 app.use(express.json());
 app.use(compression());
 // app.use(mongoSanitize({ replaceWith: '_' }));
 app.use(mongoSanitize({
     allowDots: true,
     replaceWith: '_',
-    dryRun: true, // <-- this prevents it from actually modifying anything
+    // dryRun: true, // <-- this prevents it from actually modifying anything
 }));
 
 // Routes
@@ -47,7 +54,11 @@ app.use("/api/users", userRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/order", OrderRoutes);
 app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/notifications", NotificationRoutes);
+app.use("/api/review", reviewRoutes);
+app.use("/api/admin", adminRoutes);
 
+// 404 handler
 app.use((req, res, next) => {
     res.status(404);
     next(new Error(`Not Found - ${req.originalUrl}`));

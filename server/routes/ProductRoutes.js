@@ -10,12 +10,14 @@ import {
     updateProduct,
     deleteProduct,
     searchProduct,
+    filterProducts,
 } from "../controllers/productController.js"
 
 import { protect, adminOnly } from "../middleware/authMiddleware.js"
 
 router.get("/", getProducts);
 router.get("/search", searchProduct);
+router.get("/filter", filterProducts)
 router.get("/:id", getProduct);
 
 router.post(

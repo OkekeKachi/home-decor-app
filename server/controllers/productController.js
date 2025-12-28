@@ -3,22 +3,52 @@ import { cloudinary } from "../config/cloudinary.js"
 import Product from "../models/Products.js"
 import { validationResult } from "express-validator"
 import asyncHandler from "../middleware/asyncHandler.js"
-import { login } from "./authController.js";
+
 
 // @desc Get all products
 // @route GET /api/products
 // @access Public
 export const getProducts = asyncHandler(async (req, res) => {
-    const products = await Product.find();
-    
-    res.json({ success: true, data: products });
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+
+    // 🔎 keyword search
+    const keyword = req.query.keyword
+        ? { name: { $regex: req.query.keyword, $options: "i" } }
+        : {};
+
+    // 🏷️ category filter
+    const category = req.query.category
+        ? { category: req.query.category }
+        : {};
+
+    // 💲 price filter
+    const price = req.query.minPrice && req.query.maxPrice
+        ? { price: { $gte: Number(req.query.minPrice), $lte: Number(req.query.maxPrice) } }
+        : {};
+
+    const filters = { ...keyword, ...category, ...price };
+
+    const count = await Product.countDocuments(filters);
+    const products = await Product.find(filters)
+        .limit(limit)
+        .skip(limit * (page - 1));
+
+    res.json({
+        success: true,
+        page,
+        pages: Math.ceil(count / limit),
+        total: count,
+        data: products,
+    });
 });
+
 
 // @desc Get single product
 // @route GET /api/products/:id
 // @access Public
 export const getProduct = asyncHandler(async (req, res) => {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).populate("reviews.user", "username email"); 
     if (!product) {
         res.status(404);
         throw new Error("Product not found");
@@ -93,7 +123,7 @@ export const updateProduct = asyncHandler(async (req, res) => {
         }
 
         // basic field updates
-        const fields = ["name", "price", "category", "description"];
+        const fields = ["name", "price", "category", "stock", "description"];
         fields.forEach((f) => {
             if (req.body[f] !== undefined) product[f] = req.body[f];
         });
@@ -178,18 +208,45 @@ export const deleteProduct = asyncHandler(async (req, res) => {
 });
 
 
-// search route
+// 🔍 Search route
 export const searchProduct = asyncHandler(async (req, res) => {
     try {
-        console.log("hello");
-        console.log(req.query);
+        const { q } = req.query;
 
-        const { q } = req.query; // ?q=chair
+        if (!q || q.trim() === "") {
+            return res.status(400).json({ error: "Search query is required" });
+        }
+
         const products = await Product.find({
-            name: { $regex: q, $options: "i" } // case-insensitive
+            name: { $regex: q, $options: "i" }, // case-insensitive search
         });
-        res.json(products);
+
+        res.json({ count: products.length, products });
     } catch (error) {
         res.status(500).json({ error: "Search failed" });
     }
-})
+});
+
+// 🧩 Filter route
+export const filterProducts = asyncHandler(async (req, res) => {
+    try {
+        const { category, minPrice, maxPrice, inStock } = req.query;
+
+        let filter = {};
+
+        if (category) filter.category = category;
+        if (inStock !== undefined) filter.inStock = inStock === "true";
+
+        if (minPrice || maxPrice) {
+            filter.price = {};
+            if (minPrice) filter.price.$gte = Number(minPrice);
+            if (maxPrice) filter.price.$lte = Number(maxPrice);
+        }
+
+        const products = await Product.find(filter);
+
+        res.json({ count: products.length, products });
+    } catch (error) {
+        res.status(500).json({ error: "Filtering failed" });
+    }
+});

@@ -10,7 +10,7 @@ import {
 import { protect } from "../middleware/authMiddleware.js"
 
 // Routes
-router.post("/add", protect, addToCart);
+router.post("/add", protect, addToCart,);
 router.delete("/remove/:productId", protect, removeFromCart);
 // Clear entire cart
 router.delete("/clear", protect, clearCart);

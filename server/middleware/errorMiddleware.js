@@ -1,16 +1,14 @@
+// middleware/errorHandler.js
 const errorHandler = (err, req, res, next) => {
-    console.error(err.stack);
+    console.error(err.stack); // for debugging (can remove in prod)
 
-    // Handle Mongoose validation errors
-    if (err.name === "ValidationError") {
-        return res.status(400).json({
-            message: Object.values(err.errors).map(val => val.message)
-        });
-    }
+    const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
 
-    res.status(res.statusCode === 200 ? 500 : res.statusCode);
-    res.json({
+    res.status(statusCode).json({
+        success: false,
         message: err.message || "Server Error",
+        // stack only in development
+        stack: process.env.NODE_ENV === "production" ? null : err.stack,
     });
 };
 

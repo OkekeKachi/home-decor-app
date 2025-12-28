@@ -4,9 +4,12 @@ import { genSalt, hash, compare } from "bcrypt";
 const userSchema = new Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    email: { type: String, required: true, unique: true, match: /^\S+@\S+\.\S+$/ }, // simple email validation
+    email: { type: String, required: true, unique: true, match: /^\S+@\S+\.\S+$/ },// simple email validation
     role: { type: String, enum: ["admin", "user"], default: "user" }, // start with admin
-    wishlist: [{ type: Schema.Types.ObjectId, ref: "Product" }]
+    wishlist: [{ type: Schema.Types.ObjectId, ref: "Product" }],
+    failedLoginAttempts: { type: Number, default: 0 },
+    lastFailedLogin: { type: Date },
+    lockUntil: { type: Date },
 }, { timestamps: true });
 
 // Hash password
@@ -19,7 +22,7 @@ userSchema.pre("save", async function (next) {
 
 // Compare helper
 userSchema.methods.matchPassword = function (entered) {
-    return compare(entered, this.password);
+    return compare(entered, this.password);    
 };
 
 export default model("User", userSchema);

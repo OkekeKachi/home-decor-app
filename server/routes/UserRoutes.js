@@ -1,39 +1,14 @@
-import express from "express"
+import express from "express";
+import { getAllUsers, getProfile, updateProfile } from "../controllers/userController.js";
+import { protect, adminOnly } from "../middleware/authMiddleware.js";
+
 const router = express.Router();
-import User from "../models/User.js"
-import { protect }from '../middleware/authMiddleware.js'
 
+// Only admin can see all users
+router.get("/all", protect, adminOnly, getAllUsers);
 
-
-router.get("/all", async (req, res) => {
-    try {
-        const users = await User.find();
-        res.json(users);
-    } catch (error) {
-        console.log(error);
-
-        res.status(500).json({ message: "Error fetching users" });
-    }
-});
-router.get('/profile', protect, (req, res) => {
-    res.json({ message: `Hello, ${req.user.username}` });
-});
+// Logged-in user routes
+router.get("/profile", protect, getProfile);
+router.put("/profile", protect, updateProfile);
 
 export default router;
-
-// import express from "express";
-// import { upload } from "../config/cloudinary.js";
-
-// const router = express.Router();
-
-// router.post("/upload", upload.single("image"), (req, res) => {
-//     try {
-//         // console.log(req.file.path); // Log the uploaded file info
-        
-//         res.json({ imageUrl: req.file.path });
-//     } catch (err) {
-//         res.status(500).json({ error: err.message });
-//     }
-// });
-
-// export default router;

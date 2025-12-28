@@ -8,7 +8,7 @@ import validateRequest from "../middleware/validateRequest.js"
 router.post(
   "/login",
   [
-    body("username").notEmpty().withMessage("username required"),
+    body("email").notEmpty().withMessage("email required"),
     body("password").notEmpty().withMessage("password required"),
   ],
   validateRequest,
