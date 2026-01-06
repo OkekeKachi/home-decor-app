@@ -10,6 +10,11 @@ const userSchema = new Schema({
     failedLoginAttempts: { type: Number, default: 0 },
     lastFailedLogin: { type: Date },
     lockUntil: { type: Date },
+    isVerified: { type: Boolean, default: false },
+    verificationToken: String,
+    verificationTokenExpiry: Date,
+    resetPasswordToken: String,
+    resetPasswordExpiry: Date,
 }, { timestamps: true });
 
 // Hash password

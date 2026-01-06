@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Mail, Lock, Eye, EyeOff, Home, Loader2, AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
-    const { login } = useAuth();
+    const { login, resendVerification } = useAuth();
     const router = useRouter();
     const [cooldown, setCooldown] = useState(0);
     const [form, setForm] = useState({ email: "", password: "" });
@@ -33,22 +33,34 @@ export default function LoginPage() {
             await login(form.email, form.password);
             router.push("/profile");
         } catch (err) {
-            console.log(err);
+            console.log(err.response?.data?.message);
 
             if (err?.response?.status === 429) {
-                console.log(err);
-                
                 const retry = err.response?.data?.retryAfterSeconds || 10;
                 setCooldown(retry);
                 setError(err.response?.data?.message || "Too many attempts. Try again later.");
             } else {
                 setError(err.response?.data?.message || "Login failed");
+                
             }
             // setError(err.response?.data?.message || err.response?.data || "Loginnn failed");
         } finally {
             setLoading(false);
         }
+        
     };
+
+    const sendVerificationEmail = async (email) => {
+        try {
+            await resendVerification(email);    
+            alert("Verification email resent. Please check your inbox.");
+        } catch (err) {
+            alert("Failed to resend verification email.");
+        }
+    };
+
+    
+
 
     const handleInputChange = (field, value) => {
         setForm({ ...form, [field]: value });
@@ -86,6 +98,14 @@ export default function LoginPage() {
                                     <div className="flex-1">
                                         <h4 className="font-semibold text-red-800 text-sm">Login Error</h4>
                                         <p className="text-sm text-red-700">{error}</p>
+                                        {error.includes("verify your email") && (
+                                            <button
+                                                onClick={() => sendVerificationEmail(form.email)}
+                                                className="mt-2 text-amber-700 underline text-sm font-medium hover:text-amber-900"
+                                            >
+                                                Send verification email
+                                            </button>
+                                        )}
 
                                         {cooldown > 0 && (
                                             <div className="mt-2 bg-white border border-amber-200 rounded-lg p-2">

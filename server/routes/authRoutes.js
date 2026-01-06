@@ -1,7 +1,6 @@
 import express from "express"
 const router = express.Router();
-import { login } from "../controllers/authController.js";
-import { registerUser } from '../controllers/authController.js'
+import { login, registerUser, verifyEmail, resendVerification, checkVerification, forgotPassword, resetPassword} from '../controllers/authController.js'
 import { body } from "express-validator";
 import validateRequest from "../middleware/validateRequest.js"
 
@@ -16,5 +15,11 @@ router.post(
 );
 
 router.post('/register', registerUser);
+router.get("/verify/:token", verifyEmail);
+router.post("/resend-verification", resendVerification);
+router.post("/check-verification", checkVerification);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password/:token", resetPassword);
+
 
 export default router;

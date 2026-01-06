@@ -52,6 +52,13 @@ export const AuthProvider = ({ children }) => {
     Cookies.remove("token");
     setUser(null);
   };
+  const resendVerification = async (email) => {
+    const res = await api.post("/api/auth/resend-verification", { email });
+    console.log(res.data?.message);
+    
+      return res.data?.message
+  };
+
 
   return (
     // <AuthContext.Provider value={{ user, setUser, loading, login, register, logout }}>
@@ -67,6 +74,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         login,
         register,
+        resendVerification,
         logout,
         isAuthenticated: !!user,
       }}
