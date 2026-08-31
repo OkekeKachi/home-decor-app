@@ -72,6 +72,6 @@ app.use((req, res, next) => {
 
 // Error handler (last)
 app.use(errorHandler);
-
+// Global error handler
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

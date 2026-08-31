@@ -30,8 +30,10 @@ export const updateProfile = asyncHandler(async (req, res) => {
 
     // update allowed fields only
     user.name = req.body.name || user.name;
+    user.firstName = req.body.firstName || user.firstName;
+    user.lastName = req.body.lastName || user.lastName;
     user.email = req.body.email || user.email;
-    if (req.body.password) {
+    if (req.body.password) { 
         user.password = req.body.password; // pre-save hook should hash
     }
 
@@ -43,6 +45,9 @@ export const updateProfile = asyncHandler(async (req, res) => {
             _id: updatedUser._id,
             name: updatedUser.name,
             email: updatedUser.email,
+            firstName: updatedUser.firstName,
+            lastName: updatedUser.lastName,
+            
         }
     });
 });

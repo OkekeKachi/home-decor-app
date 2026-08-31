@@ -215,7 +215,7 @@ export default function OrderDetails() {
                                                     Qty: {item.quantity}
                                                 </span>
                                                 <span className="text-sm font-medium text-gray-900">
-                                                    ${item.product?.price?.toLocaleString()}
+                                                    ₦{item.product?.price?.toLocaleString()}
                                                 </span>
                                             </div>
                                         </div>
@@ -223,7 +223,7 @@ export default function OrderDetails() {
                                         {/* Item Total */}
                                         <div className="text-right">
                                             <p className="font-semibold text-gray-900">
-                                                ${(item.quantity * (item.product?.price || 0)).toLocaleString()}
+                                                ₦{(item.quantity * (item.product?.price || 0)).toLocaleString()}
                                             </p>
                                         </div>
                                     </div>
@@ -241,21 +241,21 @@ export default function OrderDetails() {
                             <div className="space-y-3 mb-4">
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-600">Subtotal</span>
-                                    <span className="font-medium">${(order.totalPrice * 0.9).toFixed(2)}</span>
+                                    <span className="font-medium">₦{(order.totalPrice * 0.9).toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-600">Shipping</span>
-                                    <span className="font-medium">${(order.totalPrice * 0.1).toFixed(2)}</span>
+                                    <span className="font-medium">₦{(order.totalPrice * 0.1).toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-600">Tax</span>
-                                    <span className="font-medium">$0.00</span>
+                                    <span className="font-medium">₦0.00</span>
                                 </div>
                                 <div className="border-t border-gray-200 pt-3">
                                     <div className="flex justify-between">
                                         <span className="text-base font-semibold text-gray-900">Total</span>
                                         <span className="text-xl font-bold text-amber-600">
-                                            ${order.totalPrice?.toLocaleString()}
+                                            ₦{order.totalPrice?.toLocaleString()}
                                         </span>
                                     </div>
                                 </div>

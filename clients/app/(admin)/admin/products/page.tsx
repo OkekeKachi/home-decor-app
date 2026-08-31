@@ -174,7 +174,7 @@ export default function AdminProducts() {
                     {products.map((p: any) => (
                         <TableRow key={p._id}>
                             <TableCell>{p.name}</TableCell>
-                            <TableCell>${p.price}</TableCell>
+                            <TableCell>₦{p.price}</TableCell>
                             <TableCell>{p.category}</TableCell>
                             <TableCell>{p.stock}</TableCell>
                             <TableCell className="flex gap-2">

@@ -2,6 +2,8 @@ import { Schema, model } from "mongoose";
 import { genSalt, hash, compare } from "bcrypt";
 
 const userSchema = new Schema({
+    firstName: { type: String, required: false, trim: true },
+    lastName: {type: String, required: false, trim: true},
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     email: { type: String, required: true, unique: true, match: /^\S+@\S+\.\S+$/ },// simple email validation

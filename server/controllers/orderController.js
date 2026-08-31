@@ -5,116 +5,207 @@ import Cart from "../models/Cart.js";
 import Product from "../models/Products.js";
 import Order from "../models/Order.js";
 import Notification from "../models/Notification.js";
+import {
+    initializePayment,
+    verifyPayment,
+} from "../services/paystackService.js";
+
 
 // Checkout (creates order but does not deduct stock yet)
 export const checkout = asyncHandler(async (req, res) => {
     const userId = req.user.id;
 
-    // Find user cart
+    // Find user's cart
     const cart = await Cart.findOne({ user: userId }).populate("items.product");
+
     if (!cart || cart.items.length === 0) {
-        return res.status(400).json({ message: "Cart is empty" });
+        return res.status(400).json({
+            message: "Cart is empty",
+        });
     }
 
     // Validate stock
-    for (let item of cart.items) {
+    for (const item of cart.items) {
         if (item.quantity > item.product.stock) {
-            return res
-                .status(400)
-                .json({ message: `Not enough stock for ${item.product.name}` });
+            return res.status(400).json({
+                message: `Not enough stock for ${item.product.name}`,
+            });
         }
     }
 
     // Calculate total
     let totalPrice = 0;
+
     cart.items.forEach((item) => {
         totalPrice += item.product.price * item.quantity;
     });
 
-    // Create order (status: pending)
+    // Generate a unique Paystack reference
+    const reference = `LUXE-${userId}-${Date.now()}`;
+
+    // Create pending order
     const order = new Order({
         user: userId,
+
         items: cart.items.map((item) => ({
             product: item.product._id,
             quantity: item.quantity,
         })),
+
         totalPrice,
-        paymentMethod: req.body.paymentMethod || "mock",
-        status: "pending",
+
+        paymentMethod: "paystack",
         paymentStatus: "pending",
+        status: "pending",
+
+        paymentReference: reference,
     });
 
     await order.save();
 
-    // Clear cart
-    cart.items = [];
-    await cart.save();
-
-    // Notify user
-    await Notification.create({
-        userId,
-        type: "order_update",
-        message: `Order ${order._id} created. Please complete payment.`,
+    // Initialize Paystack payment
+    const payment = await initializePayment({
+        email: req.user.email,
+        amount: Math.round(totalPrice * 100),
+        reference,
+        callbackUrl: `${process.env.FRONTEND_URL}/payment/callback`,
     });
 
     res.status(201).json({
-        message: "Checkout successful. Awaiting payment.",
-        order,
+        message: "Payment initialized successfully",
+        orderId: order._id,
+        reference,
+        authorization_url: payment.data.authorization_url,
     });
 });
+
 
 
 // Confirm payment
 export const confirmPayment = asyncHandler(async (req, res) => {
+    const { reference } = req.body;
+
+    if (!reference) {
+        return res.status(400).json({
+            message: "Payment reference is required",
+        });
+    }
+
+    // Find the order using the Paystack reference
+    const order = await Order.findOne({
+        paymentReference: reference,
+        user: req.user.id,
+    });
+
+    if (!order) {
+        return res.status(404).json({
+            message: "Order not found",
+        });
+    }
+
+    // Prevent processing the same payment twice
+    if (order.paymentStatus === "successful") {
+        return res.status(400).json({
+            message: "Order already paid",
+        });
+    }
+
+    // Verify payment directly with Paystack
+    const paymentResponse = await verifyPayment(reference);
+    const paymentData = paymentResponse.data;
+
+    if (
+        paymentResponse.status !== true ||
+        paymentData.status !== "success"
+    ) {
+        return res.status(400).json({
+            message: "Payment was not successful",
+        });
+    }
+
+    // Paystack amount is in kobo, while order total is in naira
+    const expectedAmount = Math.round(order.totalPrice * 100);
+
+    if (paymentData.amount !== expectedAmount) {
+        return res.status(400).json({
+            message: "Payment amount does not match order total",
+        });
+    }
+
     const session = await mongoose.startSession();
-    session.startTransaction();
 
     try {
-        const { orderId } = req.body;
-        const order = await Order.findById(orderId).populate("items.product").session(session);
-
-        if (!order) {
-            throw new Error("Order not found");
-        }
-
-        if (order.paymentStatus === "paid") {
-            throw new Error("Order already paid");
-        }
+        session.startTransaction();
 
         // Deduct stock atomically
-        for (let item of order.items) {
+        for (const item of order.items) {
             const product = await Product.findOneAndUpdate(
-                { _id: item.product._id, stock: { $gte: item.quantity } },
-                { $inc: { stock: -item.quantity } },
-                { new: true, session }
+                {
+                    _id: item.product,
+                    stock: { $gte: item.quantity },
+                },
+                {
+                    $inc: { stock: -item.quantity },
+                },
+                {
+                    new: true,
+                    session,
+                }
             );
 
             if (!product) {
-                throw new Error(`Not enough stock for ${item.product.name}`);
+                throw new Error(
+                    "Not enough stock available for one or more products"
+                );
             }
         }
 
-        // Update order status
+        // Update order
         order.paymentStatus = "successful";
         order.status = "paid";
+        order.paidAt = new Date();
+
         await order.save({ session });
 
-        await Notification.create([{
-            userId: order.user,
-            type: "order_update",
-            message: `Payment confirmed for order ${order._id}.`,
-        }], { session });
+        // Clear the user's cart
+        const cart = await Cart.findOne({
+            user: req.user.id,
+        }).session(session);
+
+        if (cart) {
+            cart.items = [];
+            cart.totalPrice = 0;
+
+            await cart.save({ session });
+        }
+
+        // Create notification
+        await Notification.create(
+            [
+                {
+                    userId: order.user,
+                    type: "order_update",
+                    message: `Payment confirmed for order ${ order._id }.`,
+                },
+            ],
+            { session }
+        );
 
         await session.commitTransaction();
-        session.endSession();
 
-        res.json({ message: "Payment confirmed, order finalized", order });
+        res.status(200).json({
+            message: "Payment verified and order finalized",
+            order,
+        });
     } catch (error) {
         await session.abortTransaction();
-        session.endSession();
-        throw error; // asyncHandler will forward this to global error middleware
+        throw error;
+    } finally {
+        await session.endSession();
     }
 });
+
+
 
 
 // Get logged-in user's orders
@@ -160,7 +251,9 @@ export const getAllOrders = asyncHandler(async (req, res) => {
 // Update order status
 export const updateOrderStatus = asyncHandler(async (req, res) => {
     const { status } = req.body;
+    
     const order = await Order.findById(req.params.id);
+    console.log("Updating order status for order:", order);
 
     if (!order) {
         return res.status(404).json({ message: "Order not found" });

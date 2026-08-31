@@ -5,7 +5,7 @@ import api from "@/utils/axios";
 import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 
-const statusOptions = ["pending", "processing", "completed", "cancelled"];
+const statusOptions = ["pending", "completed", "cancelled"];
 
 export default function AdminOrdersPage() {
     const [orders, setOrders] = useState<any[]>([]);

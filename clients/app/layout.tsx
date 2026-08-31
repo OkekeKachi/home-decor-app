@@ -1,6 +1,8 @@
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
 export const metadata = {
@@ -16,11 +18,17 @@ export default function RootLayout({ children }) {
                     <CartProvider>
                         <Navbar />
                         {children}
+                        <Toaster
+                            position="top-right"
+                            toastOptions={{
+                                duration: 3000,
+                            }}
+                        />
+                        <Footer />
                     </CartProvider>
                 </AuthProvider>
             </body>
         </html>
     );
 }
-
 

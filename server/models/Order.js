@@ -32,15 +32,25 @@ const orderSchema = new mongoose.Schema(
         },
         paymentMethod: {
             type: String,
-            enum: ["card", "bank_transfer", "cash_on_delivery", "mock"],
-            default: "mock",
+            enum: ["paystack", "cash_on_delivery"],
+            default: "paystack",
         },
         paymentStatus: {
             type: String,
             enum: ["pending", "successful", "failed"],
             default: "pending",
         },
+        paymentReference: {
+            type: String,
+            unique: true,
+            sparse: true,
+        },
+
+        paidAt: {
+            type: Date,
+        },
     },
+
     { timestamps: true }
 );
 

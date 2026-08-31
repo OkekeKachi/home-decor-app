@@ -64,9 +64,16 @@ export default function CheckEmailPage() {
         This page will automatically redirect once your email is verified.
       </p>
 
-      {checking && (
-        <p className="text-blue-600 text-sm mb-2">Checking verification…</p>
-      )}
+      
+        <div className="h-6 mb-4 flex items-center justify-center">
+          <p
+            className={`text-sm transition-opacity ${checking ? "opacity-100 text-blue-600" : "opacity-0"
+              }`}
+          >
+            Checking verification…
+          </p>
+        </div>
+      
 
       {status && <p className="text-green-700 text-sm mb-4">{status}</p>}
 

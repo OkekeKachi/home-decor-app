@@ -108,7 +108,7 @@ export const updateCartItem = asyncHandler(async (req, res) => {
 // Get user cart
 export const getUserCart = asyncHandler(async (req, res) => {
     const userId = req.user._id;
-    const cart = await Cart.findOne({ user: userId }).populate(
+    let cart = await Cart.findOne({ user: userId }).populate(
         "items.product",
         "name price"
     );

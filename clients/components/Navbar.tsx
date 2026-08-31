@@ -3,69 +3,66 @@
 import Link from "next/link";
 import { useAuth } from "../app/context/AuthContext";
 import { useCart } from "../app/context/CartContext";
-import { ShoppingBag, User, LogOut, Home, Package, Info, Mail } from "lucide-react";
+import { ShoppingBag, User, LogOut, Package, Info, Mail } from "lucide-react";
 
 export default function Navbar() {
     const { user, logout } = useAuth();
     const { totalItems } = useCart();
 
     return (
-        <nav className="bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-100 sticky top-0 z-50">
-            <div className="container mx-auto flex items-center justify-between px-6 py-4">
-                {/* ✅ Logo */}
+        <nav className="h-[88px] bg-[#F7F3ED] border-b border-[#8B6F47]/20 sticky top-0 z-50">
+            <div className="container mx-auto flex items-center justify-between px-8 py-3">
+                {/* Logo */}
                 <Link
                     href="/"
-                    className="flex items-center space-x-2 text-2xl font-bold bg-gradient-to-rbg-clip-text text-transparent hover:from-amber-700 hover:to-orange-700 transition-all duration-300"
+                    className="flex items-center group"
                 >
-                    {/* <Home className="w-8 h-8 text-amber-600" /> */}
-                    <div className="h-14 flex items-center">
-                        <h1 className="text-2xl font-extrabold tracking-wide text-gray-900">
-                            LuxHome
-                            <span className="text-orange-500">.</span>
-                        </h1>
-                    </div>
+                    <h1 className="text-[28px] font-serif font-semibold tracking-wide text-[#1C1C1C] group-hover:text-[#183C32] transition-colors duration-300">
+                        LuxHome
+                        <span className="text-[#C9A66B]">.</span>
+                    </h1>
                 </Link>
 
                 {/* Navigation Links */}
-                <div className="hidden md:flex items-center space-x-8">
+                <div className="hidden md:flex items-center space-x-10">
                     <Link
                         href="/products"
-                        className="flex items-center space-x-2 text-gray-700 hover:text-amber-600 transition-colors duration-200 font-medium group"
+                        className="flex items-center space-x-2 text-[#1C1C1C] hover:text-[#183C32] transition-colors duration-200 text-sm font-medium tracking-wide group"
                     >
-                        <Package className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                        <Package className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity duration-200" />
                         <span>Products</span>
                     </Link>
                     <Link
                         href="/about"
-                        className="flex items-center space-x-2 text-gray-700 hover:text-amber-600 transition-colors duration-200 font-medium group"
+                        className="flex items-center space-x-2 text-[#1C1C1C] hover:text-[#183C32] transition-colors duration-200 text-sm font-medium tracking-wide group"
                     >
-                        <Info className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                        <Info className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity duration-200" />
                         <span>About</span>
                     </Link>
                     <Link
                         href="/contact"
-                        className="flex items-center space-x-2 text-gray-700 hover:text-amber-600 transition-colors duration-200 font-medium group"
+                        className="flex items-center space-x-2 text-[#1C1C1C] hover:text-[#183C32] transition-colors duration-200 text-sm font-medium tracking-wide group"
                     >
-                        <Mail className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                        <Mail className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity duration-200" />
                         <span>Contact</span>
                     </Link>
                 </div>
 
                 {/* Right Side Actions */}
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-5">
                     {user && (
                         <>
-                            <Link href="/cart" className="relative group p-2 hover:bg-gray-50 rounded-full transition-colors duration-200">
-                                <ShoppingBag className="w-6 h-6 text-gray-700 group-hover:text-amber-600 transition-colors duration-200" />
+                            <Link href="/cart" className="relative group p-2 hover:bg-[#183C32]/5 rounded transition-colors duration-200">
+                                <ShoppingBag className="w-5 h-5 text-[#1C1C1C] group-hover:text-[#183C32] transition-colors duration-200" />
                                 {totalItems > 0 && (
-                                    <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                                    <span className="absolute -top-0.5 -right-0.5 bg-[#183C32] text-white text-[10px] font-medium rounded-full w-4 h-4 flex items-center justify-center">
                                         {totalItems}
                                     </span>
                                 )}
                             </Link>
                             <Link
                                 href="/order"
-                                className="text-gray-700 hover:text-amber-600 transition-colors duration-200 font-medium hidden sm:block"
+                                className="text-[#1C1C1C] hover:text-[#183C32] transition-colors duration-200 text-sm font-medium tracking-wide hidden sm:block"
                             >
                                 Orders
                             </Link>
@@ -74,24 +71,28 @@ export default function Navbar() {
 
                     {user ? (
                         <div className="flex items-center space-x-3">
-                            <div className="hidden sm:flex items-center space-x-2 bg-gradient-to-r from-gray-50 to-gray-100 px-3 py-2 rounded-full">
-                                <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center">
-                                    <User className="w-4 h-4 text-white" />
+                            <Link href="/profile">
+                                <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 hover:bg-[#183C32]/5 rounded transition-colors duration-200">
+                                    <div className="w-7 h-7 bg-[#8B6F47]/10 border border-[#8B6F47]/20 rounded-full flex items-center justify-center">
+                                        <User className="w-3.5 h-3.5 text-[#8B6F47]" />
+                                    </div>
+                                    <span className="font-medium text-[#1C1C1C] text-sm">
+                                        {user?.data?.username}
+                                    </span>
                                 </div>
-                                <span className="font-medium text-gray-700 text-sm">{user.username}</span>
-                            </div>
+                            </Link>
                             <button
                                 onClick={logout}
-                                className="flex items-center space-x-2 bg-gray-100 hover:bg-red-50 text-gray-700 hover:text-red-600 px-4 py-2 rounded-full transition-all duration-200 font-medium group"
+                                className="flex items-center space-x-2 text-[#1C1C1C] hover:text-[#183C32] px-3 py-1.5 hover:bg-[#183C32]/5 rounded transition-all duration-200 text-sm font-medium group"
                             >
-                                <LogOut className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                                <LogOut className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity duration-200" />
                                 <span className="hidden sm:block">Logout</span>
                             </button>
                         </div>
                     ) : (
                         <Link
                             href="/login"
-                            className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white px-6 py-2.5 rounded-full font-medium transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
+                            className="bg-[#183C32] hover:bg-[#183C32]/90 text-white px-5 py-2 rounded text-sm font-medium tracking-wide transition-colors duration-200"
                         >
                             Login
                         </Link>
@@ -100,19 +101,19 @@ export default function Navbar() {
             </div>
 
             {/* Mobile Menu */}
-            <div className="md:hidden border-t border-gray-100 px-6 py-3 bg-gray-50/80">
+            <div className="md:hidden border-t border-[#8B6F47]/20 px-8 py-4 bg-[#F7F3ED]">
                 <div className="flex justify-center space-x-6">
-                    <Link href="/products" className="text-gray-600 hover:text-amber-600 text-sm font-medium">
+                    <Link href="/products" className="text-[#1C1C1C] hover:text-[#183C32] text-sm font-medium tracking-wide transition-colors duration-200">
                         Products
                     </Link>
-                    <Link href="/about" className="text-gray-600 hover:text-amber-600 text-sm font-medium">
+                    <Link href="/about" className="text-[#1C1C1C] hover:text-[#183C32] text-sm font-medium tracking-wide transition-colors duration-200">
                         About
                     </Link>
-                    <Link href="/contact" className="text-gray-600 hover:text-amber-600 text-sm font-medium">
+                    <Link href="/contact" className="text-[#1C1C1C] hover:text-[#183C32] text-sm font-medium tracking-wide transition-colors duration-200">
                         Contact
                     </Link>
                     {user && (
-                        <Link href="/order" className="text-gray-600 hover:text-amber-600 text-sm font-medium">
+                        <Link href="/order" className="text-[#1C1C1C] hover:text-[#183C32] text-sm font-medium tracking-wide transition-colors duration-200">
                             Orders
                         </Link>
                     )}

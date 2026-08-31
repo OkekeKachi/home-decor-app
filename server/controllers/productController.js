@@ -12,34 +12,55 @@ export const getProducts = asyncHandler(async (req, res) => {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
 
-    // 🔎 keyword search
+    // 🔎 Search product name, category, or description
     const keyword = req.query.keyword
-        ? { name: { $regex: req.query.keyword, $options: "i" } }
+        ? {
+            $or: [
+                { name: { $regex: req.query.keyword, $options: "i" } },
+                { category: { $regex: req.query.keyword, $options: "i" } },
+                { description: { $regex: req.query.keyword, $options: "i" } }
+            ]
+        }
         : {};
 
-    // 🏷️ category filter
+    // 🏷️ Category filter
     const category = req.query.category
         ? { category: req.query.category }
         : {};
 
-    // 💲 price filter
-    const price = req.query.minPrice && req.query.maxPrice
-        ? { price: { $gte: Number(req.query.minPrice), $lte: Number(req.query.maxPrice) } }
-        : {};
+    // 💲 Price filter
+    const minPrice = Number(req.query.minPrice);
+    const maxPrice = Number(req.query.maxPrice);
 
-    const filters = { ...keyword, ...category, ...price };
+    const price =
+        req.query.minPrice !== undefined || req.query.maxPrice !== undefined
+            ? {
+                price: {
+                    ...(req.query.minPrice !== undefined && { $gte: minPrice }),
+                    ...(req.query.maxPrice !== undefined && { $lte: maxPrice })
+                }
+            }
+            : {};
+
+    const filters = {
+        ...keyword,
+        ...category,
+        ...price
+    };
 
     const count = await Product.countDocuments(filters);
+
     const products = await Product.find(filters)
         .limit(limit)
-        .skip(limit * (page - 1));
+        .skip(limit * (page - 1))
+        .sort({ createdAt: -1 });
 
     res.json({
         success: true,
         page,
         pages: Math.ceil(count / limit),
         total: count,
-        data: products,
+        data: products
     });
 });
 

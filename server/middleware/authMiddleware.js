@@ -19,8 +19,12 @@ export async function protect(req, res, next) {
 
             next();
         } catch (err) {
-            console.error("Auth error:", err);
-            return res.status(401).json({ message: "Not authorized, token failed" });
+            console.error("AUTH ERROR NAME:", err.name);
+            console.error("AUTH ERROR MESSAGE:", err.message);
+            return res.status(401).json({
+                message: "Not authorized, token failed",
+                error: err.message
+            });
         }
     }
 

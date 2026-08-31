@@ -2,23 +2,25 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { debounce } from "lodash";
 import { useCart } from "../../context/CartContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import api from "@/utils/axios";
 import ProductCard from "../../../components/ProductCard"; // Import the ProductCard component
-import { Search, Filter, SlidersHorizontal, Grid3X3, List, Loader2 } from "lucide-react";
+import { Search, SlidersHorizontal, Loader2, X } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function ProductsPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    
     const { addToCart } = useCart();
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [showFilters, setShowFilters] = useState(false);
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
     // Filters
     const [search, setSearch] = useState("");
-    const [category, setCategory] = useState("");
+    const category = searchParams.get("category") || "";
     const [minPrice, setMinPrice] = useState(0);
     const [maxPrice, setMaxPrice] = useState(10000000);
 
@@ -48,9 +50,9 @@ export default function ProductsPage() {
                 append ? [...prev, ...res.data.data] : res.data.data
             );
             console.log(res.data.pages);
-            
-            
-            
+
+
+
             setPages(res.data.pages);
         } catch (err: any) {
             setError(err.response?.data?.message || "Failed to fetch products");
@@ -68,17 +70,24 @@ export default function ProductsPage() {
         [category, minPrice, maxPrice]
     );
 
+    
+
+    useEffect(() => {
+        setPage(1);
+
+        fetchProducts({
+            keyword: search,
+            category,
+            minPrice,
+            maxPrice,
+            page: 1,
+        });
+    }, [category, minPrice, maxPrice]);
+    
+    
     useEffect(() => {
         debouncedSearch(search);
     }, [search, debouncedSearch]);
-
-    useEffect(() => {
-        fetchProducts({ keyword: search, category, minPrice, maxPrice, page });
-    }, [category, minPrice, maxPrice]);
-
-    useEffect(() => {
-        fetchProducts({ page: 1 });
-    }, []);
 
     // Infinite scroll observer
     useEffect(() => {
@@ -109,129 +118,126 @@ export default function ProductsPage() {
         router.push(`/products/${productId}`);
     };
 
+    const activeFilterCount = [category, minPrice > 0, maxPrice < 10000000].filter(Boolean).length;
+
     if (error) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                    <div className="text-red-500 text-6xl mb-4">⚠️</div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Something went wrong</h2>
-                    <p className="text-red-500">{error}</p>
+            <div className="min-h-screen flex items-center justify-center bg-[#F7F3ED] px-6">
+                <div className="text-center max-w-sm">
+                    <div className="mx-auto w-14 h-14 flex items-center justify-center border border-[#8B6F47]/30 mb-6">
+                        <X className="w-6 h-6 text-[#8B6F47]" strokeWidth={1.5} />
+                    </div>
+                    <h2 className="font-serif text-2xl text-[#1C1C1C] mb-2">
+                        Something went wrong
+                    </h2>
+                    <p className="text-[#1C1C1C]/60 text-sm leading-relaxed">{error}</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-[#F7F3ED]">
             {/* Header */}
-            <div className="bg-white border-b border-gray-200 sticky top-16 z-40">
-                <div className="container mx-auto px-6 py-6">
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="bg-[#F7F3ED] border-b border-[#8B6F47]/20 sticky top-[88px] z-40">
+                <div className="container mx-auto px-6 lg:px-8 py-8">
+                    <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                         {/* Title & Results */}
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                                All Products
+                            <h1 className="font-serif text-3xl sm:text-4xl text-[#1C1C1C]">
+                                Explore Our Collection
                             </h1>
-                            <p className="text-gray-600">
-                                {products.length} product{products.length !== 1 ? 's' : ''} found
+                            <p className="mt-2 text-[#1C1C1C]/60 text-sm">
+                                {products.length} piece{products.length !== 1 ? "s" : ""}{" "}
+                                selected for you
                             </p>
                         </div>
 
-                        {/* Search Bar */}
-                        <div className="relative flex-1 max-w-lg">
-                            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                            <input
-                                type="text"
-                                placeholder="Search for furniture, decor, lighting..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200"
-                            />
-                        </div>
-
-                        {/* View Toggle & Filter Button */}
-                        <div className="flex items-center space-x-3">
-                            {/* View Mode Toggle */}
-                            <div className="flex bg-gray-100 p-1 rounded-lg">
-                                <button
-                                    onClick={() => setViewMode('grid')}
-                                    className={`p-2 rounded-md transition-all duration-200 ${viewMode === 'grid'
-                                            ? 'bg-white shadow-sm text-amber-600'
-                                            : 'text-gray-600 hover:text-gray-900'
-                                        }`}
-                                >
-                                    <Grid3X3 className="w-4 h-4" />
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('list')}
-                                    className={`p-2 rounded-md transition-all duration-200 ${viewMode === 'list'
-                                            ? 'bg-white shadow-sm text-amber-600'
-                                            : 'text-gray-600 hover:text-gray-900'
-                                        }`}
-                                >
-                                    <List className="w-4 h-4" />
-                                </button>
+                        {/* Search + Filter */}
+                        <div className="flex items-center gap-3 w-full lg:w-auto">
+                            <div className="relative flex-1 lg:w-72">
+                                <Search className="absolute left-0 top-1/2 -translate-y-1/2 text-[#8B6F47] w-4 h-4" />
+                                <input
+                                    type="text"
+                                    placeholder="Search furniture, decor, lighting..."
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    className="w-full pl-6 pr-3 py-2.5 bg-transparent border-b border-[#8B6F47]/30 focus:border-[#183C32] outline-none text-sm text-[#1C1C1C] placeholder:text-[#1C1C1C]/40 transition-colors duration-200"
+                                />
                             </div>
 
-                            {/* Filter Toggle */}
                             <button
                                 onClick={() => setShowFilters(!showFilters)}
-                                className={`flex items-center space-x-2 px-4 py-2 rounded-full border transition-all duration-200 ${showFilters
-                                        ? 'bg-amber-50 border-amber-300 text-amber-600'
-                                        : 'bg-white border-gray-300 text-gray-600 hover:border-amber-300'
+                                className={`flex items-center gap-2 px-4 py-2.5 border text-sm font-medium tracking-wide transition-colors duration-200 whitespace-nowrap ${showFilters || activeFilterCount > 0
+                                        ? "border-[#183C32] text-[#183C32] bg-[#183C32]/5"
+                                        : "border-[#8B6F47]/30 text-[#1C1C1C]/70 hover:border-[#183C32]/50"
                                     }`}
                             >
                                 <SlidersHorizontal className="w-4 h-4" />
-                                <span className="font-medium">Filters</span>
+                                <span className="hidden sm:inline">Filter</span>
+                                {activeFilterCount > 0 && (
+                                    <span className="w-4 h-4 flex items-center justify-center bg-[#183C32] text-white text-[10px] leading-none">
+                                        {activeFilterCount}
+                                    </span>
+                                )}
                             </button>
                         </div>
                     </div>
 
                     {/* Filters Panel */}
                     {showFilters && (
-                        <div className="mt-6 p-6 bg-gray-50 rounded-xl border border-gray-200">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="mt-6 py-6 border-t border-[#8B6F47]/15">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-2xl">
                                 {/* Category Filter */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="block text-xs font-medium tracking-wide text-[#1C1C1C]/60 mb-2">
                                         Category
                                     </label>
                                     <select
                                         value={category}
-                                        onChange={(e) => setCategory(e.target.value)}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+
+                                            if (value) {
+                                                router.push(`/products?category=${value}`);
+                                            } else {
+                                                router.push("/products");
+                                            }
+                                        }}
                                     >
                                         <option value="">All Categories</option>
                                         <option value="furniture">Furniture</option>
                                         <option value="decor">Decor</option>
                                         <option value="lighting">Lighting</option>
+                                        <option value="textiles">Textiles</option>
+                                        <option value="storage">Storage</option>
                                     </select>
                                 </div>
 
                                 {/* Price Range */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="block text-xs font-medium tracking-wide text-[#1C1C1C]/60 mb-2">
                                         Min Price
                                     </label>
                                     <input
                                         type="number"
                                         value={minPrice}
                                         onChange={(e) => setMinPrice(Number(e.target.value))}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                                        placeholder="$0"
+                                        className="w-full px-3 py-2 bg-white border border-[#8B6F47]/25 text-sm text-[#1C1C1C] focus:border-[#183C32] outline-none transition-colors duration-200"
+                                        placeholder="₦0"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="block text-xs font-medium tracking-wide text-[#1C1C1C]/60 mb-2">
                                         Max Price
                                     </label>
                                     <input
                                         type="number"
                                         value={maxPrice}
                                         onChange={(e) => setMaxPrice(Number(e.target.value))}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                                        placeholder="$100,000"
+                                        className="w-full px-3 py-2 bg-white border border-[#8B6F47]/25 text-sm text-[#1C1C1C] focus:border-[#183C32] outline-none transition-colors duration-200"
+                                        placeholder="₦100,000"
                                     />
                                 </div>
                             </div>
@@ -241,18 +247,21 @@ export default function ProductsPage() {
             </div>
 
             {/* Products Grid */}
-            <div className="container mx-auto px-6 py-8">
+            <div className="container mx-auto px-6 lg:px-8 py-12">
                 {products.length === 0 && !loading ? (
-                    <div className="text-center py-16">
-                        <div className="text-gray-400 text-6xl mb-4">🔍</div>
-                        <h3 className="text-2xl font-semibold text-gray-900 mb-2">No products found</h3>
-                        <p className="text-gray-600">Try adjusting your search or filter criteria</p>
+                    <div className="text-center py-24">
+                        <div className="mx-auto w-14 h-14 flex items-center justify-center border border-[#8B6F47]/30 mb-6">
+                            <Search className="w-5 h-5 text-[#8B6F47]" strokeWidth={1.5} />
+                        </div>
+                        <h3 className="font-serif text-2xl text-[#1C1C1C] mb-2">
+                            No pieces match your search
+                        </h3>
+                        <p className="text-[#1C1C1C]/60 text-sm">
+                            Try adjusting your search or filter criteria
+                        </p>
                     </div>
                 ) : (
-                    <div className={`grid gap-6 ${viewMode === 'grid'
-                            ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-                            : 'grid-cols-1'
-                        }`}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-12">
                         {products.map((product) => (
                             <ProductCard
                                 key={product._id}
@@ -266,10 +275,12 @@ export default function ProductsPage() {
 
                 {/* Loading Indicator */}
                 {loading && (
-                    <div className="flex items-center justify-center py-12">
-                        <div className="flex items-center space-x-2 text-amber-600">
-                            <Loader2 className="w-6 h-6 animate-spin" />
-                            <span className="font-medium">Loading more products...</span>
+                    <div className="flex items-center justify-center py-16">
+                        <div className="flex items-center gap-3 text-[#8B6F47]">
+                            <Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.75} />
+                            <span className="text-xs font-medium tracking-[0.1em] uppercase">
+                                Curating more pieces
+                            </span>
                         </div>
                     </div>
                 )}

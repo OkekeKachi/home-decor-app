@@ -16,6 +16,47 @@ const generateToken = (id) => {
 // @desc    Login user
 // @route   POST /api/auth/login
 // @access  Public
+
+const sendVerificationEmail = async (user, token) => {
+    const transporter = nodemailer.createTransport({
+        service: "Gmail",
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+        },
+    });
+
+    const verificationUrl =
+        `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
+
+    const mailOptions = {
+        from: `"Luxe Home" <${process.env.EMAIL_USER}>`,
+        to: user.email,
+        subject: "Verify your email for Luxe Home",
+        html: `
+            <p>Hi ${user.firstName || user.username},</p>
+
+            <p>Thanks for registering! Click below to verify your email:</p>
+
+            <a
+                href="${verificationUrl}"
+                style="
+                    background: #f59e0b;
+                    color: #fff;
+                    padding: 10px 20px;
+                    border-radius: 6px;
+                    text-decoration: none;
+                "
+            >
+                Verify Email
+            </a>
+
+            <p>This link expires in 1 hour.</p>
+        `,
+    };
+
+    await transporter.sendMail(mailOptions);
+};
 export const login = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
@@ -23,9 +64,7 @@ export const login = asyncHandler(async (req, res) => {
     
     // Check if user exists
     const user = await User.findOne({ email });
-    if (!user) {
-        console.log("User not found with email:", email, password);
-        
+    if (!user) {     
         res.status(400);
         throw new Error("Invalid credentials, please enter the correct email and password");
     }
@@ -74,7 +113,7 @@ export const login = asyncHandler(async (req, res) => {
 // @route   POST /api/auth/register
 // @access  Public
 export const registerUser = asyncHandler(async (req, res) => {
-    const { username, email, password } = req.body;
+    const { username, email, password, firstName, lastName } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -90,13 +129,17 @@ export const registerUser = asyncHandler(async (req, res) => {
     }
     if (existingUser && !existingUser.isVerified) {
         const token = crypto.randomBytes(32).toString("hex");
+
         existingUser.verificationToken = token;
-        existingUser.verificationTokenExpiry = Date.now() + 60 * 60 * 1000; // 1 hour
+        existingUser.verificationTokenExpiry = Date.now() + 60 * 60 * 1000;
+        existingUser.lastVerificationSent = Date.now();
+
         await existingUser.save();
 
-        // TODO: send verification email here
+        await sendVerificationEmail(existingUser, token);
+
         return res.status(200).json({
-            message: "Account exists but not verified. New verification email sent.",
+            message: "Account exists but is not verified. New verification email sent.",
         });
     }
 
@@ -107,6 +150,8 @@ export const registerUser = asyncHandler(async (req, res) => {
         username,
         email,
         password,
+        firstName,
+        lastName,
         isVerified: false,
         verificationToken: token,
         verificationTokenExpiry: Date.now() + 60 * 60 * 1000,
@@ -159,43 +204,62 @@ export const verifyEmail = asyncHandler(async (req, res) => {
     });
 
     if (!user) {
-        res.status(400);
-        throw new Error("Invalid or expired token");
+        return res.status(400).json({
+            message: "Invalid or expired verification link",
+        });
     }
 
     user.isVerified = true;
     user.verificationToken = undefined;
     user.verificationTokenExpiry = undefined;
+
     await user.save();
 
-    res.json({ message: "Email verified successfully" });
+    return res.status(200).json({
+        message: "Email verified successfully",
+    });
 });
 
 export const resendVerification = asyncHandler(async (req, res) => {
     const { email } = req.body;
 
     const user = await User.findOne({ email });
+
     if (!user) {
-        return res.status(404).json({ message: "User not found" });
+        return res.status(404).json({
+            message: "User not found",
+        });
     }
 
     if (user.isVerified) {
-        return res.status(400).json({ message: "Account already verified" });
+        return res.status(400).json({
+            message: "Account already verified",
+        });
     }
 
-    // OPTIONAL: throttle to avoid spam
-    if (user.lastVerificationSent && Date.now() - user.lastVerificationSent < 2 * 60 * 1000) {
-        return res.status(429).json({ message: "Please wait before requesting again" });
+    // Prevent spam
+    if (
+        user.lastVerificationSent &&
+        Date.now() - user.lastVerificationSent < 2 * 60 * 1000
+    ) {
+        return res.status(429).json({
+            message: "Please wait before requesting another email",
+        });
     }
 
     const token = crypto.randomBytes(32).toString("hex");
-    user.verifyToken = token;
+
+    user.verificationToken = token;
+    user.verificationTokenExpiry = Date.now() + 60 * 60 * 1000;
     user.lastVerificationSent = Date.now();
+
     await user.save();
 
-    await verifyEmail(user.email, token);
+    await sendVerificationEmail(user, token);
 
-    res.json({ message: "Verification email resent successfully" });
+    res.status(200).json({
+        message: "Verification email resent successfully",
+    });
 });
 
 export const checkVerification = async (req, res) => {

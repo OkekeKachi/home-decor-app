@@ -9,6 +9,8 @@ export default function RegisterPage() {
   const { register } = useAuth();
   const router = useRouter();
   const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
     username: "",
     email: "",
     password: "",
@@ -37,9 +39,10 @@ export default function RegisterPage() {
     setError("");
 
     try {
-      await register(form.username, form.email, form.password);
+      await register(form.username, form.email, form.password, form.firstName, form.lastName);
       router.push("/checkEmail?email=" + encodeURIComponent(form.email));
     } catch (err: any) {
+      console.log(err)
       setError(err.response?.data?.message || "Registration failed");
     } finally {
       setLoading(false);
@@ -52,25 +55,25 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[#FAF9F6] flex items-center justify-center p-6 relative">
       {/* Background Decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-amber-200/20 to-orange-300/20 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-yellow-200/20 to-amber-300/20 rounded-full blur-3xl"></div>
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-[#C9A66B]/10 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-[#D4B47A]/10 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="relative w-full max-w-md">
+      <div className="relative w-full max-w-md z-10">
         {/* Main Card */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-gray-900 to-black p-8 text-center">
+          <div className="bg-[#FAF9F6] p-8 text-center border-b border-gray-100">
             <div className="flex items-center justify-center mb-4">
-              <div className="bg-white/20 p-3 rounded-full backdrop-blur-sm">
-                <UserPlus className="w-8 h-8 text-white" />
+              <div className="bg-[#C9A66B]/15 p-3 rounded-full">
+                <UserPlus className="w-8 h-8 text-[#B8924A]" />
               </div>
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
-            <p className="text-gray-300">Join the Luxe Home community</p>
+            <h1 className="text-3xl font-serif font-bold text-[#1C1C1C] mb-2">Create Account</h1>
+            <p className="text-gray-500">Join the Luxe Home community</p>
           </div>
 
           {/* Form */}
@@ -86,6 +89,58 @@ export default function RegisterPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* First & Last Name Fields */}
+              <div className="grid grid-cols-2 gap-4">
+
+                {/* First Name */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    First Name
+                  </label>
+
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <User className="w-5 h-5 text-gray-400" />
+                    </div>
+
+                    <input
+                      type="text"
+                      required
+                      placeholder="First name"
+                      value={form.firstName}
+                      onChange={(e) =>
+                        handleInputChange("firstName", e.target.value)
+                      }
+                      className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#C9A66B]/20 focus:border-[#C9A66B] transition-all duration-200 bg-white text-[#1C1C1C] placeholder-gray-400"
+                    />
+                  </div>
+                </div>
+
+                {/* Last Name */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Last Name
+                  </label>
+
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <User className="w-5 h-5 text-gray-400" />
+                    </div>
+
+                    <input
+                      type="text"
+                      required
+                      placeholder="Last name"
+                      value={form.lastName}
+                      onChange={(e) =>
+                        handleInputChange("lastName", e.target.value)
+                      }
+                      className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#C9A66B]/20 focus:border-[#C9A66B] transition-all duration-200 bg-white text-[#1C1C1C] placeholder-gray-400"
+                    />
+                  </div>
+                </div>
+
+              </div>
               {/* Username Field */}
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
@@ -101,7 +156,7 @@ export default function RegisterPage() {
                     placeholder="Choose a username"
                     value={form.username}
                     onChange={(e) => handleInputChange("username", e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+                    className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#C9A66B]/20 focus:border-[#C9A66B] transition-all duration-200 bg-white text-[#1C1C1C] placeholder-gray-400"
                   />
                 </div>
               </div>
@@ -121,7 +176,7 @@ export default function RegisterPage() {
                     placeholder="Enter your email"
                     value={form.email}
                     onChange={(e) => handleInputChange("email", e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+                    className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#C9A66B]/20 focus:border-[#C9A66B] transition-all duration-200 bg-white text-[#1C1C1C] placeholder-gray-400"
                   />
                 </div>
               </div>
@@ -141,12 +196,12 @@ export default function RegisterPage() {
                     placeholder="Create a password"
                     value={form.password}
                     onChange={(e) => handleInputChange("password", e.target.value)}
-                    className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+                    className="w-full pl-12 pr-12 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#C9A66B]/20 focus:border-[#C9A66B] transition-all duration-200 bg-white text-[#1C1C1C] placeholder-gray-400"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-[#B8924A] transition-colors duration-200"
                   >
                     {showPassword ? (
                       <EyeOff className="w-5 h-5" />
@@ -175,12 +230,12 @@ export default function RegisterPage() {
                     placeholder="Confirm your password"
                     value={form.confirmPassword}
                     onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                    className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+                    className="w-full pl-12 pr-12 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#C9A66B]/20 focus:border-[#C9A66B] transition-all duration-200 bg-white text-[#1C1C1C] placeholder-gray-400"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-[#B8924A] transition-colors duration-200"
                   >
                     {showConfirmPassword ? (
                       <EyeOff className="w-5 h-5" />
@@ -196,15 +251,15 @@ export default function RegisterPage() {
                 <input
                   type="checkbox"
                   required
-                  className="w-4 h-4 mt-1 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
+                  className="w-4 h-4 mt-1 text-[#C9A66B] border-gray-300 rounded focus:ring-[#C9A66B]/20"
                 />
-                <label className="text-sm text-gray-700">
+                <label className="text-sm text-gray-600 leading-relaxed">
                   I agree to the{" "}
-                  <Link href="/terms" className="text-amber-600 hover:text-amber-700 font-medium hover:underline">
+                  <Link href="/terms" className="text-[#B8924A] hover:text-[#A6823C] font-medium hover:underline transition-colors">
                     Terms of Service
                   </Link>{" "}
                   and{" "}
-                  <Link href="/privacy" className="text-amber-600 hover:text-amber-700 font-medium hover:underline">
+                  <Link href="/privacy" className="text-[#B8924A] hover:text-[#A6823C] font-medium hover:underline transition-colors">
                     Privacy Policy
                   </Link>
                 </label>
@@ -214,7 +269,7 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
+                className="w-full bg-[#935e02] hover:bg-[#B8924A] text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
               >
                 {loading ? (
                   <>
@@ -233,13 +288,13 @@ export default function RegisterPage() {
             {/* Divider */}
             <div className="my-8 flex items-center">
               <div className="flex-1 border-t border-gray-200"></div>
-              <span className="px-4 text-sm text-gray-500 bg-white">or</span>
+              <span className="px-4 text-sm text-gray-400 bg-white">or</span>
               <div className="flex-1 border-t border-gray-200"></div>
             </div>
 
             {/* Social Registration */}
             <div className="space-y-3">
-              <button className="w-full flex items-center justify-center space-x-3 border border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 py-3 px-6 rounded-xl transition-all duration-200">
+              <button className="w-full flex items-center justify-center space-x-3 border border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50 py-3 px-6 rounded-xl transition-all duration-200 shadow-sm">
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                   <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -256,7 +311,7 @@ export default function RegisterPage() {
                 Already have an account?{" "}
                 <Link
                   href="/login"
-                  className="font-semibold text-amber-600 hover:text-amber-700 hover:underline"
+                  className="font-semibold text-[#B8924A] hover:text-[#A6823C] hover:underline transition-colors"
                 >
                   Sign in here
                 </Link>

@@ -106,18 +106,18 @@ export default function OrdersPage() {
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'bg-yellow-50 text-yellow-800 border-yellow-200';
       case 'processing':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-blue-50 text-blue-800 border-blue-200';
       case 'shipped':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
+        return 'bg-purple-50 text-purple-800 border-purple-200';
       case 'delivered':
       case 'completed':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-green-50 text-green-800 border-green-200';
       case 'cancelled':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-red-50 text-red-800 border-red-200';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-gray-50 text-gray-800 border-gray-200';
     }
   };
 
@@ -143,10 +143,10 @@ export default function OrdersPage() {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
-        className={`w-5 h-5 transition-colors duration-200 ${interactive ? 'cursor-pointer hover:text-amber-400' : ''
+        className={`w-5 h-5 transition-colors duration-200 ${interactive ? 'cursor-pointer hover:text-[#C9A66B]' : ''
           } ${i < rating
-            ? "text-amber-400 fill-amber-400"
-            : "text-gray-300"
+            ? "text-[#C9A66B] fill-[#C9A66B]"
+            : "text-[#8B6F47]/30"
           }`}
         onClick={() => interactive && onStarClick?.(i + 1)}
       />
@@ -155,10 +155,10 @@ export default function OrdersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex items-center space-x-3 text-amber-600">
-          <Loader2 className="w-8 h-8 animate-spin" />
-          <span className="text-lg font-medium">Loading your orders...</span>
+      <div className="min-h-screen bg-[#F7F3ED] flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="w-8 h-8 animate-spin text-[#183C32]" />
+          <span className="text-[#1C1C1C]/60 text-sm tracking-widest uppercase">Loading your orders...</span>
         </div>
       </div>
     );
@@ -166,14 +166,16 @@ export default function OrdersPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#F7F3ED] flex items-center justify-center px-6">
         <div className="text-center max-w-md">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Failed to Load Orders</h2>
-          <p className="text-red-600 mb-6">{error}</p>
+          <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-red-50 border border-red-100 flex items-center justify-center">
+            <AlertCircle className="w-8 h-8 text-red-600" />
+          </div>
+          <h2 className="text-2xl font-serif text-[#1C1C1C] mb-3">Failed to Load Orders</h2>
+          <p className="text-red-600/80 mb-8 text-sm leading-relaxed">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200"
+            className="inline-flex items-center space-x-2 bg-[#183C32] hover:bg-[#183C32]/90 text-white px-6 py-3 text-sm font-medium tracking-wide transition-colors duration-300 rounded-sm"
           >
             Try Again
           </button>
@@ -183,86 +185,90 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F7F3ED]">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-16 z-40">
-        <div className="container mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
+      <div className="bg-[#FAFAF8] border-b border-[#8B6F47]/10">
+        <div className="container mx-auto px-6 py-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => router.back()}
-                className="flex items-center space-x-2 text-gray-600 hover:text-amber-600 transition-colors duration-200"
+                className="flex items-center space-x-2 text-[#1C1C1C]/60 hover:text-[#183C32] transition-colors duration-200 group"
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-200" />
                 <span className="font-medium">Back</span>
               </button>
-              <div className="h-6 w-px bg-gray-300 hidden sm:block"></div>
+              <div className="h-6 w-px bg-[#8B6F47]/20 hidden sm:block"></div>
               <div className="flex items-center space-x-3">
-                <Package className="w-6 h-6 text-amber-600" />
-                <h1 className="text-2xl font-bold text-gray-900">My Orders</h1>
-                {filteredOrders.length > 0 && (
-                  <span className="bg-amber-100 text-amber-800 text-sm font-medium px-2 py-1 rounded-full">
-                    {filteredOrders.length} order{filteredOrders.length !== 1 ? 's' : ''}
-                  </span>
-                )}
+                <Package className="w-6 h-6 text-[#8B6F47]" />
+                <div>
+                  <h1 className="text-2xl font-serif text-[#1C1C1C]">My Orders</h1>
+                  {filteredOrders.length > 0 && (
+                    <p className="text-sm text-[#1C1C1C]/60 mt-0.5">
+                      {filteredOrders.length} order{filteredOrders.length !== 1 ? 's' : ''}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mt-6">
-            {/* Search */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search orders by ID or product..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+              <div className="relative flex-1 sm:max-w-xs">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#8B6F47]/50 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Search orders..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-8 py-2.5 bg-white border border-[#8B6F47]/20 rounded-sm text-sm text-[#1C1C1C] placeholder-[#8B6F47]/50 focus:outline-none focus:border-[#183C32] focus:ring-1 focus:ring-[#183C32] transition-all duration-200"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#8B6F47]/50 hover:text-[#1C1C1C] transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              <div className="relative">
+                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#8B6F47]/50 w-4 h-4 pointer-events-none" />
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full sm:w-auto pl-9 pr-8 py-2.5 bg-white border border-[#8B6F47]/20 rounded-sm text-sm text-[#1C1C1C] focus:outline-none focus:border-[#183C32] focus:ring-1 focus:ring-[#183C32] transition-all duration-200 appearance-none cursor-pointer"
                 >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-
-            {/* Status Filter */}
-            <div className="flex items-center space-x-2">
-              <Filter className="w-5 h-5 text-gray-400" />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-              >
-                <option value="all">All Orders</option>
-                <option value="pending">Pending</option>
-                <option value="processing">Processing</option>
-                <option value="shipped">Shipped</option>
-                <option value="delivered">Delivered</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
+                  <option value="all">All Orders</option>
+                  <option value="pending">Pending</option>
+                  <option value="processing">Processing</option>
+                  <option value="shipped">Shipped</option>
+                  <option value="delivered">Delivered</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <svg className="w-4 h-4 text-[#8B6F47]/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-6 py-8 md:py-12">
         {filteredOrders.length === 0 ? (
-          <div className="max-w-md mx-auto text-center">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12">
-              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <ShoppingBag className="w-10 h-10 text-gray-400" />
+          <div className="max-w-md mx-auto text-center py-12">
+            <div className="bg-white border border-[#8B6F47]/10 rounded-sm p-12">
+              <div className="w-20 h-20 bg-[#F7F3ED] border border-[#8B6F47]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <ShoppingBag className="w-10 h-10 text-[#8B6F47]" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-3">
+              <h2 className="text-2xl font-serif text-[#1C1C1C] mb-3">
                 {orders.length === 0 ? "No orders yet" : "No orders found"}
               </h2>
-              <p className="text-gray-600 mb-8">
+              <p className="text-[#1C1C1C]/60 mb-8 leading-relaxed">
                 {orders.length === 0
                   ? "You haven't placed any orders yet. Start shopping to see your orders here!"
                   : "No orders match your current search or filter criteria."
@@ -270,7 +276,7 @@ export default function OrdersPage() {
               </p>
               <Link
                 href="/products"
-                className="inline-flex items-center space-x-2 bg-amber-500 hover:bg-amber-600 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105"
+                className="inline-flex items-center space-x-2 bg-[#183C32] hover:bg-[#183C32]/90 text-white px-8 py-3 rounded-sm font-medium tracking-wide transition-all duration-200"
               >
                 <ShoppingBag className="w-5 h-5" />
                 <span>Start Shopping</span>
@@ -280,175 +286,166 @@ export default function OrdersPage() {
         ) : (
           <div className="space-y-6">
             {filteredOrders.map((order: any) => (
-              <div key={order._id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div key={order._id} className="bg-white border border-[#8B6F47]/10 rounded-sm overflow-hidden">
                 {/* Order Header */}
-                <div className="p-6 border-b border-gray-100">
+                <div className="p-6 border-b border-[#8B6F47]/10 bg-[#FAFAF8]/50">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-semibold text-gray-900">Order #{order._id.slice(-8)}</span>
-                        <div className={`flex items-center space-x-1 px-2 py-1 rounded-full border text-xs font-medium ${getStatusColor(order.status)}`}>
-                          {getStatusIcon(order.status)}
-                          <span className="capitalize">{order.status}</span>
-                        </div>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      <span className="font-medium text-[#1C1C1C]">Order #{order._id.slice(-8).toUpperCase()}</span>
+                      <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-sm border text-xs font-medium tracking-wide ${getStatusColor(order.status)}`}>
+                        {getStatusIcon(order.status)}
+                        <span className="capitalize">{order.status}</span>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-4 text-sm text-gray-500">
-                      <div className="flex items-center space-x-1">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 text-sm">
+                      <div className="flex items-center space-x-2 text-[#1C1C1C]/60">
                         <Calendar className="w-4 h-4" />
-                        <span>{new Date(order.createdAt).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}</span>
+                        <span>{new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                       </div>
                       <Link
                         href={`/order/${order._id}`}
-                        className="flex items-center space-x-1 text-amber-600 hover:text-amber-700 font-medium transition-colors duration-200"
+                        className="flex items-center space-x-1.5 text-[#183C32] hover:text-[#183C32]/80 font-medium transition-colors duration-200 group"
                       >
-                        <Eye className="w-4 h-4" />
                         <span>View Details</span>
+                        <Eye className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-200" />
                       </Link>
                     </div>
                   </div>
                 </div>
 
                 {/* Order Items */}
-                <div className="p-6">
-                  <div className="space-y-4">
-                    {order.items.map((item: any) => (
-                      <div key={item._id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl">
-                        {/* Product Image */}
-                        <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
-                          {item.product.imageUrl ? (
-                            <img
-                              src={item.product.imageUrl}
-                              alt={item.product.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <Package className="w-6 h-6 text-gray-400" />
-                          )}
-                        </div>
+                <div className="p-6 space-y-4">
+                  {order.items.map((item: any) => (
+                    <div key={item._id} className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 bg-[#F7F3ED] border border-[#8B6F47]/10 rounded-sm">
+                      <div className="flex-shrink-0 w-20 h-20 bg-white border border-[#8B6F47]/10 rounded-sm flex items-center justify-center overflow-hidden">
+                        {item.product.imageUrl ? (
+                          <img
+                            src={item.product.imageUrl}
+                            alt={item.product.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Package className="w-6 h-6 text-[#8B6F47]/40" />
+                        )}
+                      </div>
 
-                        {/* Product Details */}
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-gray-900 truncate">
-                            {item.product.name}
-                          </h3>
-                          <p className="text-sm text-gray-500 capitalize">
-                            {item.product.category} • Qty: {item.quantity}
-                          </p>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <span className="font-semibold text-amber-600">
-                              ${item.product.price}
-                            </span>
-                            <span className="text-sm text-gray-500">each</span>
-                          </div>
-                        </div>
-
-                        {/* Item Total */}
-                        <div className="text-right">
-                          <p className="font-bold text-gray-900">
-                            ${(item.product.price * item.quantity).toFixed(2)}
-                          </p>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-[#1C1C1C] truncate">
+                          {item.product.name}
+                        </h3>
+                        <p className="text-sm text-[#1C1C1C]/60 mt-1 capitalize">
+                          {item.product.category} • Qty: {item.quantity}
+                        </p>
+                        <div className="flex items-center space-x-2 mt-1.5">
+                          <span className="text-sm font-medium text-[#8B6F47]">
+                            ₦{item.product.price.toLocaleString()}
+                          </span>
+                          <span className="text-xs text-[#1C1C1C]/40">each</span>
                         </div>
                       </div>
-                    ))}
-                  </div>
 
-                  {/* Order Total */}
-                  <div className="mt-6 pt-4 border-t border-gray-200 flex justify-between items-center">
-                    <span className="text-lg font-semibold text-gray-900">Order Total:</span>
-                    <span className="text-2xl font-bold text-amber-600">${order.totalPrice}</span>
-                  </div>
-
-                  {/* Review Section for Completed Orders */}
-                  {(order.status === "completed" || order.status === "delivered") && (
-                    <div className="mt-6 pt-4 border-t border-gray-200">
-                      <h4 className="font-semibold text-gray-900 mb-4">Leave Reviews</h4>
-                      <div className="space-y-3">
-                        {order.items.map((item: any) => (
-                          <div key={item._id} className="p-4 bg-amber-50 rounded-xl">
-                            {reviewingProduct === item.product._id ? (
-                              <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                  <span className="font-medium text-gray-900">{item.product.name}</span>
-                                  <button
-                                    onClick={() => setReviewingProduct(null)}
-                                    className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
-                                  >
-                                    <X className="w-5 h-5" />
-                                  </button>
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Your Rating
-                                  </label>
-                                  <div className="flex items-center space-x-1">
-                                    {renderStars(rating, true, setRating)}
-                                  </div>
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Your Review
-                                  </label>
-                                  <textarea
-                                    value={comment}
-                                    onChange={(e) => setComment(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200"
-                                    placeholder="Share your experience with this product..."
-                                    rows={3}
-                                  />
-                                </div>
-                                <div className="flex space-x-3">
-                                  <button
-                                    onClick={() => handleSubmitReview(item.product._id)}
-                                    disabled={submittingReview}
-                                    className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center space-x-2"
-                                  >
-                                    {submittingReview ? (
-                                      <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        <span>Submitting...</span>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Star className="w-4 h-4" />
-                                        <span>Submit Review</span>
-                                      </>
-                                    )}
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setReviewingProduct(null);
-                                      setComment("");
-                                      setRating(5);
-                                    }}
-                                    className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors duration-200"
-                                  >
-                                    Cancel
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="flex items-center justify-between">
-                                <span className="font-medium text-gray-900">{item.product.name}</span>
-                                <button
-                                  onClick={() => setReviewingProduct(item.product._id)}
-                                  className="flex items-center space-x-2 text-amber-600 hover:text-amber-700 font-medium transition-colors duration-200"
-                                >
-                                  <MessageSquare className="w-4 h-4" />
-                                  <span>Write Review</span>
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        ))}
+                      <div className="text-right sm:text-right mt-2 sm:mt-0">
+                        <p className="text-lg font-medium text-[#1C1C1C]">
+                          ₦{(item.product.price * item.quantity).toLocaleString()}
+                        </p>
                       </div>
                     </div>
-                  )}
+                  ))}
                 </div>
+
+                {/* Order Total */}
+                <div className="px-6 pb-6 pt-2">
+                  <div className="flex justify-between items-center pt-4 border-t border-[#8B6F47]/10">
+                    <span className="text-sm font-medium text-[#1C1C1C]/80">Order Total</span>
+                    <span className="text-xl font-serif text-[#183C32]">₦{order.totalPrice.toLocaleString()}</span>
+                  </div>
+                </div>
+
+                {/* Review Section for Completed/Delivered Orders */}
+                {(order.status === "completed" || order.status === "delivered") && (
+                  <div className="p-6 bg-[#F3EDE3] border-t border-[#8B6F47]/10">
+                    <h4 className="font-serif text-lg text-[#1C1C1C] mb-4">Leave a Review</h4>
+                    <div className="space-y-4">
+                      {order.items.map((item: any) => (
+                        <div key={item._id} className="bg-white border border-[#8B6F47]/10 rounded-sm p-5">
+                          {reviewingProduct === item.product._id ? (
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium text-[#1C1C1C]">{item.product.name}</span>
+                                <button
+                                  onClick={() => setReviewingProduct(null)}
+                                  className="text-[#1C1C1C]/40 hover:text-[#1C1C1C] transition-colors duration-200"
+                                >
+                                  <X className="w-5 h-5" />
+                                </button>
+                              </div>
+                              <div>
+                                <label className="block text-xs font-semibold text-[#1C1C1C]/60 tracking-[0.1em] uppercase mb-2">
+                                  Your Rating
+                                </label>
+                                <div className="flex items-center space-x-1">
+                                  {renderStars(rating, true, setRating)}
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-xs font-semibold text-[#1C1C1C]/60 tracking-[0.1em] uppercase mb-2">
+                                  Your Review
+                                </label>
+                                <textarea
+                                  value={comment}
+                                  onChange={(e) => setComment(e.target.value)}
+                                  className="w-full px-4 py-3 bg-[#FAFAF8] border border-[#8B6F47]/20 rounded-sm text-sm text-[#1C1C1C] placeholder-[#8B6F47]/50 focus:outline-none focus:border-[#183C32] focus:ring-1 focus:ring-[#183C32] transition-all duration-200 resize-none"
+                                  placeholder="Share your experience with this product..."
+                                  rows={3}
+                                />
+                              </div>
+                              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                                <button
+                                  onClick={() => handleSubmitReview(item.product._id)}
+                                  disabled={submittingReview}
+                                  className="flex-1 sm:flex-none bg-[#183C32] hover:bg-[#183C32]/90 text-white px-6 py-2.5 rounded-sm text-sm font-medium tracking-wide transition-colors duration-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                                >
+                                  {submittingReview ? (
+                                    <>
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                      <span>Submitting...</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Star className="w-4 h-4" />
+                                      <span>Submit Review</span>
+                                    </>
+                                  )}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setReviewingProduct(null);
+                                    setComment("");
+                                    setRating(5);
+                                  }}
+                                  className="flex-1 sm:flex-none border border-[#8B6F47]/20 text-[#1C1C1C]/70 hover:bg-[#F7F3ED] px-6 py-2.5 rounded-sm text-sm font-medium tracking-wide transition-colors duration-200"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                              <span className="font-medium text-[#1C1C1C]">{item.product.name}</span>
+                              <button
+                                onClick={() => setReviewingProduct(item.product._id)}
+                                className="flex items-center justify-center space-x-2 text-[#183C32] hover:text-[#183C32]/80 font-medium text-sm transition-colors duration-200 w-full sm:w-auto py-2 sm:py-0"
+                              >
+                                <MessageSquare className="w-4 h-4" />
+                                <span>Write Review</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

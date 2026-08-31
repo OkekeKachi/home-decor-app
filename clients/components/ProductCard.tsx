@@ -19,7 +19,8 @@ export default function ProductCard({ product, onAddToCart, onViewProduct }: Pro
     const [isLiked, setIsLiked] = useState(false);
     const [imageError, setImageError] = useState(false);
 
-    const handleAddToCart = () => {
+    const handleAddToCart = (e: React.MouseEvent) => {
+        e.stopPropagation();
         onAddToCart(product._id);
     };
 
@@ -27,109 +28,125 @@ export default function ProductCard({ product, onAddToCart, onViewProduct }: Pro
         onViewProduct(product._id);
     };
 
+    const isOutOfStock = product.stock <= 0;
+
     return (
-        <div className="group bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-amber-200">
+        <div
+            className="group flex flex-col bg-white border border-[#8B6F47]/10 hover:border-[#183C32]/30 transition-colors duration-300 cursor-pointer rounded-sm"
+            onClick={handleViewProduct}
+        >
             {/* Image Container */}
-            <div className="relative aspect-square overflow-hidden bg-gray-50">
+            <div className="relative aspect-[4/5] overflow-hidden bg-[#F7F3ED] rounded-t-sm">
                 {product.imageUrl && !imageError ? (
                     <img
                         src={product.imageUrl}
                         alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                         onError={() => setImageError(true)}
                     />
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                        <div className="text-center text-gray-400">
-                            <div className="w-16 h-16 mx-auto mb-2 bg-gray-300 rounded-lg flex items-center justify-center">
-                                🏠
-                            </div>
-                            <p className="text-sm">No Image</p>
+                    <div className="w-full h-full flex items-center justify-center bg-[#F7F3ED]">
+                        <div className="text-center text-[#8B6F47]/60">
+                            <span className="text-[10px] uppercase tracking-[0.2em]">Image Unavailable</span>
                         </div>
                     </div>
                 )}
 
-                {/* Overlay Actions */}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                    <div className="flex space-x-2">
-                        <button
-                            onClick={handleViewProduct}
-                            className="bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
-                        >
-                            <Eye className="w-4 h-4 text-gray-700" />
-                        </button>
-                        {product.stock > 0 && (
-                            <button
-                                onClick={handleAddToCart}
-                                className="bg-amber-500 hover:bg-amber-600 p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
-                            >
-                                <ShoppingCart className="w-4 h-4 text-white" />
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                {/* Stock Badge */}
-                {product.stock <= 0 && (
-                    <div className="absolute top-3 left-3">
-                        <span className="bg-red-500 text-white text-xs font-medium px-2 py-1 rounded-full">
-                            Out of Stock
-                        </span>
-                    </div>
-                )}
-
-                {/* Category Badge */}
-                <div className="absolute top-3 right-3">
-                    <span className="bg-white/90 backdrop-blur-sm text-gray-700 text-xs font-medium px-2 py-1 rounded-full capitalize">
+                {/* Top Badges */}
+                <div className="absolute top-4 left-4 right-4 flex justify-between items-start pointer-events-none">
+                    {/* Category Label */}
+                    <span className="bg-white/90 backdrop-blur-sm text-[#1C1C1C] text-[10px] uppercase tracking-[0.15em] px-2.5 py-1 pointer-events-auto border border-[#8B6F47]/10">
                         {product.category}
                     </span>
+
+                    {/* Out of Stock Label */}
+                    {isOutOfStock && (
+                        <span className="bg-[#1C1C1C]/80 backdrop-blur-sm text-white text-[10px] uppercase tracking-[0.15em] px-2.5 py-1">
+                            Unavailable
+                        </span>
+                    )}
                 </div>
 
-                {/* Like Button */}
+                {/* Desktop Hover Action */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none group-hover:pointer-events-auto bg-[#F7F3ED]/10">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewProduct();
+                        }}
+                        className="bg-white text-[#1C1C1C] px-5 py-2.5 text-xs uppercase tracking-widest hover:bg-[#183C32] hover:text-white transition-colors duration-300 flex items-center space-x-2 shadow-sm"
+                    >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>View Details</span>
+                    </button>
+                </div>
+
+                {/* Wishlist Button */}
                 <button
-                    onClick={() => setIsLiked(!isLiked)}
-                    className="absolute bottom-3 right-3 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setIsLiked(!isLiked);
+                    }}
+                    className="absolute bottom-4 right-4 p-2 bg-white/90 backdrop-blur-sm hover:bg-white border border-[#8B6F47]/10 transition-all duration-200 pointer-events-auto"
+                    aria-label="Add to wishlist"
                 >
                     <Heart
-                        className={`w-4 h-4 transition-colors duration-200 ${isLiked ? 'text-red-500 fill-red-500' : 'text-gray-600'
+                        className={`w-4 h-4 transition-colors duration-200 ${isLiked ? 'text-[#183C32] fill-[#183C32]' : 'text-[#8B6F47]'
                             }`}
                     />
                 </button>
             </div>
 
             {/* Content */}
-            <div className="p-4">
-                <div className="mb-2">
-                    <h3 className="font-semibold text-gray-900 line-clamp-2 group-hover:text-amber-600 transition-colors duration-200">
-                        {product.name}
-                    </h3>
-                    {product.description && (
-                        <p className="text-sm text-gray-500 line-clamp-2 mt-1">
-                            {product.description}
-                        </p>
-                    )}
-                </div>
+            <div className="flex flex-col flex-grow p-5">
+                {/* 1. Product Name */}
+                <h3 className="font-serif text-lg text-[#1C1C1C] group-hover:text-[#183C32] transition-colors duration-300 mb-1">
+                    {product.name}
+                </h3>
 
-                {/* Price and Actions */}
-                <div className="flex items-center justify-between">
-                    <div className="flex flex-col">
-                        <span className="text-2xl font-bold text-gray-900">
-                            ${product.price.toLocaleString()}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                            {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                {/* 2. Short Description */}
+                {product.description && (
+                    <p className="text-sm text-[#8B6F47] line-clamp-2 mb-3 leading-relaxed">
+                        {product.description}
+                    </p>
+                )}
+
+                <div className="mt-auto pt-4 border-t border-[#8B6F47]/10">
+                    {/* 3. Price */}
+                    <div className="mb-2">
+                        <span className="text-xl font-medium text-[#1C1C1C]">
+                            ₦{product.price.toLocaleString()}
                         </span>
                     </div>
 
+                    {/* 4. Stock Availability */}
+                    <div className="mb-4">
+                        {isOutOfStock ? (
+                            <span className="text-xs text-[#8B6F47] uppercase tracking-wider">Currently Unavailable</span>
+                        ) : (
+                            <span className="text-xs text-[#183C32] font-medium">
+                                {product.stock} {product.stock === 1 ? 'piece' : 'pieces'} available
+                            </span>
+                        )}
+                    </div>
+
+                    {/* 5. Add to Cart */}
                     <button
                         onClick={handleAddToCart}
-                        disabled={product.stock <= 0}
-                        className={`px-4 py-2 rounded-full font-medium text-sm transition-all duration-200 ${product.stock > 0
-                                ? 'bg-amber-500 hover:bg-amber-600 text-white hover:shadow-lg hover:scale-105'
-                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        disabled={isOutOfStock}
+                        className={`w-full flex items-center justify-center space-x-2 py-3.5 text-sm font-medium tracking-wide transition-all duration-300 ${isOutOfStock
+                                ? 'bg-[#F7F3ED] text-[#8B6F47]/50 cursor-not-allowed border border-[#8B6F47]/10'
+                                : 'bg-[#183C32] text-white hover:bg-[#183C32]/90 group/btn'
                             }`}
                     >
-                        {product.stock > 0 ? 'Add to Cart' : 'Sold Out'}
+                        {isOutOfStock ? (
+                            <span>Unavailable</span>
+                        ) : (
+                            <>
+                                <span>Add to Cart</span>
+                                <ShoppingCart className="w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
+                            </>
+                        )}
                     </button>
                 </div>
             </div>
