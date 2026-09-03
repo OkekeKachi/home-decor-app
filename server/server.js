@@ -57,6 +57,11 @@ app.use(mongoSanitize({
 }));
 
 // Routes
+app.get("/", (req, res) => {
+    res.json({
+        message: "Home Decor API is running 🚀",
+    });
+});
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/users", userRoutes);
