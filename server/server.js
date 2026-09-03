@@ -35,10 +35,18 @@ app.use(
     })
 );
 
-app.use(cors({
-    origin: "http://localhost:3000", // frontend URL
-    credentials: true
-}));
+const allowedOrigins = [
+    "http://localhost:3000",
+    process.env.FRONTEND_URL,
+];
+
+app.use(
+    cors({
+        origin: allowedOrigins,
+        credentials: true,
+    })
+);
+
 app.use(express.json());
 app.use(compression());
 // app.use(mongoSanitize({ replaceWith: '_' }));
