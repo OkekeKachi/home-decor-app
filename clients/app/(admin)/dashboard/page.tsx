@@ -1,105 +1,170 @@
 "use client";
-import { useEffect, useState } from "react";
-import api from "@/utils/axios";
-import Cookies from "js-cookie";
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis } from "recharts";
 
-export default function AdminDashboard() {
-    const [stats, setStats] = useState<any>(null);
-    const [topProducts, setTopProducts] = useState<any[]>([]);
+import { useCallback, useEffect, useState } from "react";
+import axios from "axios";
+import Cookies from "js-cookie";
+
+import api from "@/utils/axios";
+
+interface User {
+    _id: string;
+    name: string;
+    email: string;
+    role: "admin" | "user";
+    createdAt: string;
+}
+
+interface UsersResponse {
+    data: User[];
+}
+
+export default function AdminUsersPage() {
+    const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const token = Cookies.get("token");
+    const fetchUsers = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError(null);
 
-                const [statsRes, productsRes] = await Promise.all([
-                    api.get("/api/admin/stats", { headers: { Authorization: `Bearer ${token}` } }),
-                    api.get("/api/admin/top-products", { headers: { Authorization: `Bearer ${token}` } })
-                ]);
+            const token = Cookies.get("token");
 
-                setStats(statsRes.data);
-                setTopProducts(productsRes.data);
-            } catch (err: any) {
-                setError(err.response?.data?.message || "Failed to load dashboard");
-            } finally {
-                setLoading(false);
+            if (!token) {
+                throw new Error("Authentication token not found.");
             }
-        };
 
-        fetchStats();
+            const response = await api.get<UsersResponse>(
+                "/api/users/all",
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            setUsers(response.data.data);
+        } catch (err: unknown) {
+            let message = "Failed to load users.";
+
+            if (axios.isAxiosError(err)) {
+                message =
+                    err.response?.data?.message || message;
+            } else if (err instanceof Error) {
+                message = err.message;
+            }
+
+            setError(message);
+        } finally {
+            setLoading(false);
+        }
     }, []);
 
-    if (loading) return <p className="p-4">Loading dashboard...</p>;
-    if (error) return <p className="p-4 text-red-500">{error}</p>;
+    useEffect(() => {
+        void fetchUsers();
+    }, [fetchUsers]);
 
-    // Colors for charts
-    const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#A855F7"];
+    if (loading) {
+        return (
+            <div className="flex min-h-[300px] items-center justify-center">
+                <p className="text-gray-500">Loading users...</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                <p className="text-red-600">{error}</p>
+
+                <button
+                    type="button"
+                    onClick={() => void fetchUsers()}
+                    className="mt-3 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                >
+                    Try again
+                </button>
+            </div>
+        );
+    }
 
     return (
-        <div className="container mx-auto px-6 py-8">
-            <h1 className="text-2xl font-bold mb-6">📊 Admin Dashboard</h1>
+        <div className="space-y-6">
+            <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                    All Users
+                </h1>
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-                <div className="bg-white p-6 rounded-xl shadow">
-                    <p className="text-gray-500">Total Users</p>
-                    <p className="text-3xl font-bold">{stats.totalUsers}</p>
-                </div>
-                <div className="bg-white p-6 rounded-xl shadow">
-                    <p className="text-gray-500">Total Orders</p>
-                    <p className="text-3xl font-bold">{stats.totalOrders}</p>
-                </div>
-                <div className="bg-white p-6 rounded-xl shadow">
-                    <p className="text-gray-500">Total Sales</p>
-                    <p className="text-3xl font-bold text-green-600">
-                        ₦{stats.totalSales.toLocaleString()}
+                <p className="mt-1 text-sm text-gray-500">
+                    View registered users and their account roles.
+                </p>
+            </div>
+
+            {users.length === 0 ? (
+                <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
+                    <p className="text-gray-500">
+                        No users found.
                     </p>
                 </div>
-            </div>
+            ) : (
+                <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                    Name
+                                </th>
 
-            {/* Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Orders by Status */}
-                <div className="bg-white p-6 rounded-xl shadow">
-                    <h2 className="text-lg font-semibold mb-4">Orders by Status</h2>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <PieChart>
-                            <Pie
-                                data={stats.ordersByStatus.map((s: any) => ({ name: s._id, value: s.count }))}
-                                dataKey="value"
-                                nameKey="name"
-                                cx="50%"
-                                cy="50%"
-                                outerRadius={100}
-                                label
-                            >
-                                {stats.ordersByStatus.map((_: any, index: number) => (
-                                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                                ))}
-                            </Pie>
-                            <Tooltip />
-                            <Legend />
-                        </PieChart>
-                    </ResponsiveContainer>
-                </div>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                    Email
+                                </th>
 
-                {/* Top Products */}
-                <div className="bg-white p-6 rounded-xl shadow">
-                    <h2 className="text-lg font-semibold mb-4">Top Products</h2>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={topProducts}>
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <Tooltip />
-                            <Legend />
-                            <Bar dataKey="totalQuantity" fill="#4F46E5" />
-                        </BarChart>
-                    </ResponsiveContainer>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                    Role
+                                </th>
+
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                    Joined
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody className="divide-y divide-gray-200">
+                            {users.map((user) => (
+                                <tr
+                                    key={user._id}
+                                    className="hover:bg-gray-50"
+                                >
+                                    <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                                        {user.name}
+                                    </td>
+
+                                    <td className="px-4 py-3 text-sm text-gray-600">
+                                        {user.email}
+                                    </td>
+
+                                    <td className="px-4 py-3">
+                                        <span
+                                            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${user.role === "admin"
+                                                    ? "bg-purple-100 text-purple-700"
+                                                    : "bg-green-100 text-green-700"
+                                                }`}
+                                        >
+                                            {user.role}
+                                        </span>
+                                    </td>
+
+                                    <td className="px-4 py-3 text-sm text-gray-600">
+                                        {new Date(
+                                            user.createdAt
+                                        ).toLocaleDateString()}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
-            </div>
+            )}
         </div>
     );
 }

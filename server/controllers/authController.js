@@ -105,6 +105,10 @@ export const login = asyncHandler(async (req, res) => {
         user:{
             id: user._id,
             email: user.email,
+            username: user.username,
+            role: user.role,
+            firstName: user.firstName,
+            lastName: user.lastName
         },
     });
 });

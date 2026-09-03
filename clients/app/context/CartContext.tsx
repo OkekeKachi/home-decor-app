@@ -1,20 +1,60 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
+import {
+    createContext,
+    useContext,
+    useEffect,
+    useState,
+    type Dispatch,
+    type ReactNode,
+    type SetStateAction,
+} from "react";
 import Cookies from "js-cookie";
-import api from "@/utils/axios";
-import { useAuth } from "./AuthContext";
+import axios from "axios";
 import toast from "react-hot-toast";
 
-const CartContext = createContext();
+import api from "@/utils/axios";
+import { useAuth } from "./AuthContext";
 
-export const CartProvider = ({ children }) => {
+interface CartProduct {
+    _id: string;
+    name?: string;
+    price: number;
+    image?: string;
+}
+
+interface CartItem {
+    product: CartProduct;
+    quantity: number;
+}
+
+interface CartResponse {
+    _id?: string;
+    user?: string;
+    items: CartItem[];
+    totalPrice?: number;
+}
+
+interface CartContextType {
+    cart: CartItem[];
+    loading: boolean;
+    addToCart: (productId: string, quantity?: number) => Promise<void>;
+    removeFromCart: (productId: string) => Promise<void>;
+    updateQuantity: (productId: string, quantity: number) => Promise<void>;
+    clearCart: () => Promise<void>;
+    totalItems: number;
+    totalPrice: number;
+    setCart: Dispatch<SetStateAction<CartItem[]>>;
+}
+
+const CartContext = createContext<CartContextType | undefined>(undefined);
+
+export const CartProvider = ({ children }: { children: ReactNode }) => {
     const { user } = useAuth();
 
-    const [cart, setCart] = useState([]);
+    const [cart, setCart] = useState<CartItem[]>([]);
     const [loading, setLoading] = useState(false);
 
-    // 🔹 Load cart from backend when user logs in
     useEffect(() => {
         const fetchCart = async () => {
             if (!user) {
@@ -27,19 +67,22 @@ export const CartProvider = ({ children }) => {
 
                 const token = Cookies.get("token");
 
-                const res = await api.get("/api/cart", {
+                if (!token) {
+                    setCart([]);
+                    return;
+                }
+
+                const res = await api.get<CartResponse>("/api/cart", {
                     headers: {
-                        Authorization: `Bearer ${ token } `,
+                        Authorization: `Bearer ${token}`,
                     },
                 });
 
-                console.log(res.data);
-
-                setCart(res.data.items || []);
-            } catch (err) {
+                setCart(res.data.items ?? []);
+            } catch (err: unknown) {
                 console.error(
                     "Failed to load cart:",
-                    err.response?.data || err.message
+                    axios.isAxiosError(err) ? err.response?.data : err
                 );
 
                 setCart([]);
@@ -51,126 +94,158 @@ export const CartProvider = ({ children }) => {
         fetchCart();
     }, [user]);
 
-    // 🔹 Add to cart
-    const addToCart = async (productId, quantity = 1) => {
+    const addToCart = async (
+        productId: string,
+        quantity: number = 1
+    ): Promise<void> => {
+        if (quantity < 1) {
+            toast.error("Quantity must be at least 1");
+            return;
+        }
+
         try {
             const token = Cookies.get("token");
 
-            const res = await api.post(
+            if (!token) {
+                toast.error("Please log in to add items to your cart");
+                return;
+            }
+
+            const res = await api.post<CartResponse>(
                 "/api/cart/add",
                 { productId, quantity },
                 {
                     headers: {
-                        Authorization: `Bearer ${ token } `,
+                        Authorization: `Bearer ${token}`,
                     },
                 }
             );
 
-            setCart(res.data.items);
+            setCart(res.data.items ?? []);
 
             toast.success(
                 quantity > 1
-                    ? `${ quantity } items added to cart`
+                    ? `${quantity} items added to cart`
                     : "Product added to cart"
             );
-        } catch (err) {
+        } catch (err: unknown) {
             console.error(
                 "Failed to add to cart:",
-                err.response?.data || err.message
+                axios.isAxiosError(err) ? err.response?.data : err
             );
 
             toast.error(
-                    "Failed to add product to cart"
+                axios.isAxiosError(err)
+                    ? err.response?.data?.message || "Failed to add product to cart"
+                    : "Failed to add product to cart"
             );
         }
     };
 
-    // 🔹 Remove from cart
-    const removeFromCart = async (productId) => {
+    const removeFromCart = async (productId: string): Promise<void> => {
         try {
             const token = Cookies.get("token");
 
-            const res = await api.delete(
-                `/api/cart/remove/${productId} `,
+            if (!token) {
+                toast.error("Please log in to manage your cart");
+                return;
+            }
+
+            const res = await api.delete<CartResponse>(
+                `/api/cart/remove/${productId}`,
                 {
                     headers: {
-                        Authorization: `Bearer ${ token } `,
+                        Authorization: `Bearer ${token}`,
                     },
                 }
             );
 
-            setCart(res.data.items);
+            setCart(res.data.items ?? []);
 
             toast.success("Product removed from cart");
-        } catch (err) {
+        } catch (err: unknown) {
             console.error(
                 "Failed to remove from cart:",
-                err.response?.data || err.message
+                axios.isAxiosError(err) ? err.response?.data : err
             );
 
             toast.error(
-                err.response?.data?.message ||
-                    "Failed to remove product"
+                axios.isAxiosError(err)
+                    ? err.response?.data?.message || "Failed to remove product"
+                    : "Failed to remove product"
             );
         }
     };
 
-    // 🔹 Update quantity
-    const updateQuantity = async (productId, quantity) => {
+    const updateQuantity = async (
+        productId: string,
+        quantity: number
+    ): Promise<void> => {
+        if (quantity < 1) {
+            toast.error("Quantity must be at least 1");
+            return;
+        }
+
         try {
             const token = Cookies.get("token");
 
-            const res = await api.put(
+            if (!token) {
+                toast.error("Please log in to manage your cart");
+                return;
+            }
+
+            const res = await api.put<CartResponse>(
                 "/api/cart/update",
-                {
-                    productId,
-                    quantity,
-                },
+                { productId, quantity },
                 {
                     headers: {
-                        Authorization: `Bearer ${ token } `,
+                        Authorization: `Bearer ${token}`,
                     },
                 }
             );
 
-            setCart(res.data.items);
-        } catch (err) {
+            setCart(res.data.items ?? []);
+        } catch (err: unknown) {
             console.error(
                 "Failed to update cart:",
-                err.response?.data || err.message
+                axios.isAxiosError(err) ? err.response?.data : err
             );
 
             toast.error(
-                err.response?.data?.message ||
-                    "Failed to update cart"
+                axios.isAxiosError(err)
+                    ? err.response?.data?.message || "Failed to update cart"
+                    : "Failed to update cart"
             );
         }
     };
 
-    // 🔹 Clear cart
-    const clearCart = async () => {
+    const clearCart = async (): Promise<void> => {
         try {
             const token = Cookies.get("token");
+
+            if (!token) {
+                toast.error("Please log in to manage your cart");
+                return;
+            }
 
             await api.delete("/api/cart/clear", {
                 headers: {
-                    Authorization: `Bearer ${ token } `,
+                    Authorization: `Bearer ${token}`,
                 },
             });
 
-            // ✅ Reset cart immediately
             setCart([]);
-
             toast.success("Cart cleared");
-        } catch (err) {
+        } catch (err: unknown) {
             console.error(
                 "Failed to clear cart:",
-                err.response?.data || err.message
+                axios.isAxiosError(err) ? err.response?.data : err
             );
 
             toast.error(
-                err.response?.data?.message ||
-                    "Failed to clear cart"
+                axios.isAxiosError(err)
+                    ? err.response?.data?.message || "Failed to clear cart"
+                    : "Failed to clear cart"
             );
         }
     };
@@ -181,8 +256,7 @@ export const CartProvider = ({ children }) => {
     );
 
     const totalPrice = cart.reduce(
-        (sum, item) =>
-            sum + item.product.price * item.quantity,
+        (sum, item) => sum + item.product.price * item.quantity,
         0
     );
 
@@ -205,4 +279,12 @@ export const CartProvider = ({ children }) => {
     );
 };
 
-export const useCart = () => useContext(CartContext);
+export const useCart = (): CartContextType => {
+    const context = useContext(CartContext);
+
+    if (!context) {
+        throw new Error("useCart must be used within a CartProvider");
+    }
+
+    return context;
+};

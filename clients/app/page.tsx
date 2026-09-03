@@ -3,8 +3,7 @@ import HomeContent from "@/components/Homecontent";
 
 const page = () => {
   return (
-    <div>
-      
+    <div>      
       <HomeContent />
     </div>
   )

@@ -4,28 +4,26 @@ import { useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-export default function AdminRoute({
-    children,
-}: {
+interface AdminRouteProps {
     children: React.ReactNode;
-}) {
+}
+
+export default function AdminRoute({ children }: AdminRouteProps) {
     const { user, loading } = useAuth();
     const router = useRouter();
 
-    const isAdmin = user?.data?.role === "admin";
+    const isAdmin = user?.role === "admin";
 
     useEffect(() => {
-        if (!loading && !isAdmin) {
+        if (!loading && (!user || !isAdmin)) {
             router.replace("/");
         }
-    }, [loading, isAdmin, router]);
+    }, [loading, user, isAdmin, router]);
 
-    // While checking authentication
     if (loading) {
         return <p>Loading...</p>;
     }
 
-    // Don't render admin content for non-admins
     if (!user || !isAdmin) {
         return null;
     }

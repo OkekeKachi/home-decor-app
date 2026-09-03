@@ -1,6 +1,6 @@
 "use client";
+
 import { useEffect, useState } from "react";
-import api from "@/utils/axios";
 import Link from "next/link";
 import {
   ShieldCheck,
@@ -11,31 +11,37 @@ import {
   Star,
   ArrowRight,
 } from "lucide-react";
+import api from "@/utils/axios";
+import axios from "axios";
 
+interface Product {
+  _id: string;
+  name: string;
+  price: number;
+  imageUrl: string;
+  rating?: number;
+}
 
-/**
- * LuxHome — Homepage content
- * Sits between the existing <Navbar /> and <Footer />.
- * Palette: cream #F7F3ED · forest #183C32 · gold #C9A66B · brown #8B6F47 · ink #1C1C1C
- *
- * Swap CATEGORIES / PRODUCTS for API data later — the shape is intentionally
- * flat and serializable so it can be dropped in from an existing endpoint.
- */
+interface ProductsResponse {
+  data: Product[];
+}
 
-// ---------------------------------------------------------------------------
-// Sample data — replace with data from your existing backend
-// ---------------------------------------------------------------------------
+interface FeaturedProductsProps {
+  products: Product[];
+  loading: boolean;
+  error: string;
+}
 
 const CATEGORIES = [
   {
-    id: "Furniture",
+    id: "furniture",
     name: "Furniture",
     href: "/products?category=furniture",
     image:
       "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=900&q=80",
   },
   {
-    id: "Textiles",
+    id: "textiles",
     name: "Textiles",
     href: "/products?category=textiles",
     image:
@@ -56,8 +62,6 @@ const CATEGORIES = [
       "https://images.unsplash.com/photo-1616627988026-4f5e5e7f6a6a?auto=format&fit=crop&w=900&q=80",
   },
 ];
-
-
 
 const BENEFITS = [
   {
@@ -82,74 +86,73 @@ const BENEFITS = [
   },
 ];
 
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
-
 export default function HomeContent() {
-    const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-    useEffect(() => {
-        const fetchProducts = async () => {
-            try {
-                const res = await api.get("/api/products", {
-                    params: {
-                        page: 1,
-                        limit: 8,
-                    },
-                });
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        setError("");
 
-                setProducts(res.data.data);
-            } catch (err) {
-                setError(
-                    err.response?.data?.message ||
-                    "Failed to load products"
-                );
-            } finally {
-                setLoading(false);
-            }
-        };
+        const res = await api.get<ProductsResponse>("/api/products", {
+          params: {
+            page: 1,
+            limit: 8,
+          },
+        });
 
-        fetchProducts();
-    }, []);
+        setProducts(res.data.data);
+      } catch (err: unknown) {
+        if (axios.isAxiosError<{ message?: string }>(err)) {
+          setError(
+            err.response?.data?.message || "Failed to load products"
+          );
+        } else {
+          setError("Failed to load products");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return (
-        <main className="bg-[#F7F3ED]">
-            <Hero />
-            <CategorySection />
-            <FeaturedProducts
-                products={products}
-                loading={loading}
-                error={error}
-            />
-            <EditorialSection />
-            <BenefitsSection />
-            <VisualBreak />
-            <FinalCTA />
-        </main>
-    );
+    fetchProducts();
+  }, []);
+
+  return (
+    <main className="bg-[#F7F3ED]">
+      <Hero />
+      <CategorySection />
+      <FeaturedProducts
+        products={products}
+        loading={loading}
+        error={error}
+      />
+      <EditorialSection />
+      <BenefitsSection />
+      <VisualBreak />
+      <FinalCTA />
+    </main>
+  );
 }
-
-// ---------------------------------------------------------------------------
-// 1. Hero
-// ---------------------------------------------------------------------------
 
 function Hero() {
   return (
     <section className="relative overflow-hidden">
       <div className="container mx-auto px-8 pt-16 pb-20 lg:pt-24 lg:pb-28">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-          {/* Copy */}
           <div className="lg:col-span-5 lg:pr-4">
             <h1 className="font-serif text-[#1C1C1C] text-5xl sm:text-6xl leading-[1.08] tracking-tight">
               Transform your space
             </h1>
+
             <p className="mt-6 text-[#1C1C1C]/70 text-lg leading-relaxed max-w-md">
               Discover timeless pieces designed to bring comfort, character,
               and elegance into every room.
             </p>
+
             <div className="mt-9 flex flex-wrap items-center gap-4">
               <Link
                 href="/products"
@@ -157,6 +160,7 @@ function Hero() {
               >
                 Shop Collection
               </Link>
+
               <Link
                 href="/products"
                 className="inline-flex items-center justify-center border border-[#183C32] text-[#183C32] px-8 py-3.5 text-sm font-medium tracking-wide hover:bg-[#183C32]/5 transition-colors duration-200"
@@ -166,7 +170,6 @@ function Hero() {
             </div>
           </div>
 
-          {/* Image */}
           <div className="lg:col-span-7">
             <div className="relative aspect-[4/3] lg:aspect-[16/11]">
               <img
@@ -174,8 +177,12 @@ function Hero() {
                 alt="A sunlit living room styled with warm, natural furniture"
                 className="w-full h-full object-cover"
               />
+
               <div className="absolute -bottom-6 -left-6 hidden sm:block bg-white px-6 py-4 shadow-[0_8px_30px_rgba(28,28,28,0.08)] border border-[#8B6F47]/15">
-                <p className="font-serif text-2xl text-[#183C32]">1,200+</p>
+                <p className="font-serif text-2xl text-[#183C32]">
+                  1,200+
+                </p>
+
                 <p className="text-xs text-[#1C1C1C]/60 tracking-wide mt-0.5">
                   Pieces curated by our design team
                 </p>
@@ -188,10 +195,6 @@ function Hero() {
   );
 }
 
-// ---------------------------------------------------------------------------
-// 2. Shop by Category
-// ---------------------------------------------------------------------------
-
 function CategorySection() {
   return (
     <section className="container mx-auto px-8 py-20 lg:py-24">
@@ -199,6 +202,7 @@ function CategorySection() {
         <h2 className="font-serif text-[#1C1C1C] text-3xl sm:text-4xl">
           Shop by Category
         </h2>
+
         <p className="mt-3 text-[#1C1C1C]/65 text-base leading-relaxed">
           Find pieces that make every room feel like home.
         </p>
@@ -216,11 +220,14 @@ function CategorySection() {
               alt={category.name}
               className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
             />
+
             <div className="absolute inset-0 bg-gradient-to-t from-[#1C1C1C]/55 via-[#1C1C1C]/0 to-transparent" />
+
             <div className="absolute inset-x-0 bottom-0 p-5">
               <p className="font-serif text-white text-xl">
                 {category.name}
               </p>
+
               <span className="mt-1 inline-flex items-center gap-1.5 text-[#F7F3ED]/85 text-xs tracking-wide translate-y-1 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
                 Explore
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -233,37 +240,56 @@ function CategorySection() {
   );
 }
 
-// ---------------------------------------------------------------------------
-// 3. Featured Products
-// ---------------------------------------------------------------------------
-
-function FeaturedProducts({ products, loading, error }) {
+function FeaturedProducts({
+  products,
+  loading,
+  error,
+}: FeaturedProductsProps) {
   return (
     <section className="container mx-auto px-8 py-20 lg:py-24">
       <div className="max-w-xl">
         <h2 className="font-serif text-[#1C1C1C] text-3xl sm:text-4xl">
           Curated For Your Home
         </h2>
+
         <p className="mt-3 text-[#1C1C1C]/65 text-base leading-relaxed">
           Thoughtfully selected pieces to elevate your everyday spaces.
         </p>
       </div>
 
-      <div className="mt-12 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 lg:gap-6">
-        {products.map((product) => (
-          <ProductCard key={product._id} product={product} />
-        ))}
-      </div>
+      {loading && (
+        <p className="mt-12 text-center text-[#1C1C1C]/60">
+          Loading products...
+        </p>
+      )}
+
+      {!loading && error && (
+        <p className="mt-12 text-center text-red-600">
+          {error}
+        </p>
+      )}
+
+      {!loading && !error && products.length === 0 && (
+        <p className="mt-12 text-center text-[#1C1C1C]/60">
+          No products available.
+        </p>
+      )}
+
+      {!loading && !error && products.length > 0 && (
+        <div className="mt-12 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 lg:gap-6">
+          {products.map((product) => (
+            <ProductCard key={product._id} product={product} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }
 
-
-function ProductCard({ product }) {
+function ProductCard({ product }: { product: Product }) {
   return (
     <div className="group bg-white border border-[#8B6F47]/12">
       <div className="relative aspect-square overflow-hidden">
-
         <Link href={`/products/${product._id}`}>
           <img
             src={product.imageUrl}
@@ -284,8 +310,9 @@ function ProductCard({ product }) {
       <div className="p-4">
         <div className="flex items-center gap-1 text-[#C9A66B]">
           <Star className="w-3.5 h-3.5 fill-[#C9A66B]" />
+
           <span className="text-xs text-[#1C1C1C]/60">
-            {product.rating}
+            {product.rating ?? "New"}
           </span>
         </div>
 
@@ -295,7 +322,7 @@ function ProductCard({ product }) {
 
         <div className="mt-2.5 flex items-center justify-between">
           <span className="font-serif text-[#183C32] text-lg">
-            ₦{product.price}
+            ₦{product.price.toLocaleString()}
           </span>
 
           <button
@@ -309,10 +336,6 @@ function ProductCard({ product }) {
     </div>
   );
 }
-
-// ---------------------------------------------------------------------------
-// 4. Editorial Brand Section
-// ---------------------------------------------------------------------------
 
 function EditorialSection() {
   return (
@@ -330,15 +353,18 @@ function EditorialSection() {
           <span className="text-xs font-medium tracking-[0.14em] text-[#8B6F47]">
             The LuxHome Collection
           </span>
+
           <h2 className="mt-4 font-serif text-[#1C1C1C] text-3xl sm:text-4xl leading-[1.15]">
             Beautiful spaces begin with beautiful pieces.
           </h2>
+
           <p className="mt-5 text-[#1C1C1C]/70 text-base leading-relaxed max-w-md">
             At LuxHome, we believe your home should reflect who you are.
             From timeless furniture to carefully selected accents, every
             piece is chosen to help you create a space that feels uniquely
             yours.
           </p>
+
           <Link
             href="/about"
             className="mt-8 inline-flex items-center justify-center border border-[#183C32] text-[#183C32] px-8 py-3.5 text-sm font-medium tracking-wide hover:bg-[#183C32]/5 transition-colors duration-200"
@@ -351,10 +377,6 @@ function EditorialSection() {
   );
 }
 
-// ---------------------------------------------------------------------------
-// 5. Why LuxHome
-// ---------------------------------------------------------------------------
-
 function BenefitsSection() {
   return (
     <section className="container mx-auto px-8 py-20 lg:py-24">
@@ -366,11 +388,16 @@ function BenefitsSection() {
         {BENEFITS.map(({ icon: Icon, title, description }) => (
           <div key={title} className="text-center px-2">
             <div className="mx-auto w-12 h-12 flex items-center justify-center border border-[#C9A66B]/40">
-              <Icon className="w-5 h-5 text-[#C9A66B]" strokeWidth={1.75} />
+              <Icon
+                className="w-5 h-5 text-[#C9A66B]"
+                strokeWidth={1.75}
+              />
             </div>
+
             <h3 className="mt-5 text-[#1C1C1C] text-base font-medium">
               {title}
             </h3>
+
             <p className="mt-2 text-[#1C1C1C]/60 text-sm leading-relaxed">
               {description}
             </p>
@@ -381,10 +408,6 @@ function BenefitsSection() {
   );
 }
 
-// ---------------------------------------------------------------------------
-// 6. Visual Break
-// ---------------------------------------------------------------------------
-
 function VisualBreak() {
   return (
     <section className="relative">
@@ -394,17 +417,21 @@ function VisualBreak() {
           alt="A minimalist room bathed in afternoon light"
           className="w-full h-full object-cover"
         />
+
         <div className="absolute inset-0 bg-[#1C1C1C]/35" />
+
         <div className="absolute inset-0 flex items-center">
           <div className="container mx-auto px-8">
             <div className="max-w-md">
               <h2 className="font-serif text-white text-3xl sm:text-4xl leading-[1.15]">
                 Designed for the way you live.
               </h2>
+
               <p className="mt-4 text-white/85 text-base leading-relaxed">
                 Pieces that turn ordinary rooms into spaces worth coming
                 home to.
               </p>
+
               <Link
                 href="/products"
                 className="mt-6 inline-flex items-center gap-2 text-white text-sm font-medium tracking-wide border-b border-[#C9A66B] pb-1 hover:gap-3 transition-all duration-200"
@@ -420,24 +447,23 @@ function VisualBreak() {
   );
 }
 
-// ---------------------------------------------------------------------------
-// 7. Final CTA
-// ---------------------------------------------------------------------------
-
 function FinalCTA() {
   return (
     <section className="container mx-auto px-8 py-20 lg:py-28">
       <div className="relative overflow-hidden bg-[#F0E9DC] px-8 py-16 lg:py-20 text-center">
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#183C32] via-[#C9A66B] to-[#183C32]" />
+
         <h2 className="font-serif text-[#1C1C1C] text-3xl sm:text-4xl max-w-lg mx-auto leading-[1.15]">
           Make your space feel like home
         </h2>
+
         <p className="mt-4 text-[#1C1C1C]/65 text-base">
           Discover pieces you&apos;ll love living with.
         </p>
+
         <Link
           href="/products"
-          className="mt-8 inline-flex items-center justify-center bg-[#183C32] text-white px-9 py-3.5 text-sm font-medium tracking-wide hover:bg-[#183C32]/90 transition-colors duration-200"
+          className="mt-8 inline-flex items-center justify-center bg-[#183C32] text-white px-9 py-3.5 text-sm font-medium tracking-wide hover:bg-[#183C3‍2]/90 transition-colors duration-200"
         >
           Shop Now
         </Link>

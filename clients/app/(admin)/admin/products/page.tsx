@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
+import axios from "axios";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -24,235 +26,542 @@ import {
     TableBody,
     TableCell,
 } from "@/components/ui/table";
-import { Plus, Edit, Trash, RefreshCw, Search } from "lucide-react";
+
+import {
+    Plus,
+    Edit,
+    Trash,
+    RefreshCw,
+    Search,
+} from "lucide-react";
+
 import api from "@/utils/axios";
 import Cookies from "js-cookie";
 
+interface Product {
+    _id: string;
+    name: string;
+    price: number;
+    category: string;
+    stock: number;
+    description?: string;
+    image?: string;
+}
+
+interface ProductsResponse {
+    data: Product[];
+}
+
+interface ProductForm {
+    name: string;
+    price: string;
+    category: string;
+    stock: string;
+    description: string;
+    image: File | null;
+}
+
+const initialForm: ProductForm = {
+    name: "",
+    price: "",
+    category: "",
+    stock: "",
+    description: "",
+    image: null,
+};
+
 export default function AdminProducts() {
-    const [products, setProducts] = useState([]);
+    const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState("");
     const [category, setCategory] = useState("");
-    const [token, setToken] = useState<string | undefined>(undefined);
     const [openModal, setOpenModal] = useState(false);
     const [editing, setEditing] = useState<string | null>(null);
+    const [saving, setSaving] = useState(false);
+    const [deleting, setDeleting] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
-    const [form, setForm] = useState({
-        name: "",
-        price: "",
-        category: "",
-        stock: "",
-        description: "",
-        image: null as File | null,
-    });
+    const [form, setForm] = useState<ProductForm>(initialForm);
 
-    /** Fetch all products with optional filters */
-    const fetchProducts = async () => {
-        setLoading(true);
-        const res = await api.get("/api/products", {
-            params: { search, category },
-        });
-        setProducts(res.data.data);
-        setLoading(false);
-    };
+    const fetchProducts = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError(null);
 
-    useEffect(() => {
-        const token = Cookies.get("token");
-        setToken(token);
-        fetchProducts();
+            const response = await api.get<ProductsResponse>(
+                "/api/products",
+                {
+                    params: {
+                        search,
+                        category,
+                    },
+                }
+            );
+
+            setProducts(response.data.data);
+        } catch (err: unknown) {
+            let message = "Failed to load products.";
+
+            if (axios.isAxiosError(err)) {
+                message =
+                    err.response?.data?.message || message;
+            } else if (err instanceof Error) {
+                message = err.message;
+            }
+
+            setError(message);
+        } finally {
+            setLoading(false);
+        }
     }, [search, category]);
 
-    /** Delete product */
-    const handleDelete = async (id: string) => {
-        if (!confirm("Delete this product?")) return;
-        await api.delete(`/api/products/${id}`);
-        fetchProducts();
+    useEffect(() => {
+        void fetchProducts();
+    }, [fetchProducts]);
+
+    const resetForm = () => {
+        setForm(initialForm);
+        setEditing(null);
     };
 
-    /** Create or update product */
-    const handleSave = async () => {
-        const fd = new FormData();
-        fd.append("name", form.name);
-        fd.append("price", form.price);
-        fd.append("category", form.category);
-        fd.append("stock", form.stock);
-        fd.append("description", form.description);
-        if (form.image) fd.append("image", form.image);
+    const openCreateModal = () => {
+        resetForm();
+        setOpenModal(true);
+    };
 
-        if (editing) {
-            
-            const id = editing;
-            
-            
-            // ✅ PUT to /api/products/:id (your backend update route)
-            await api.put(`/api/products/${id}`, fd, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            console.log(id);
-        } else {
-            await api.post("/api/products", fd, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-        }
+    const openEditModal = (product: Product) => {
+        setEditing(product._id);
 
-        // reset & refresh
-        setOpenModal(false);
-        setEditing(null);
         setForm({
-            name: "",
-            price: "",
-            category: "",
-            stock: "",
-            description: "",
+            name: product.name,
+            price: String(product.price),
+            category: product.category,
+            stock: String(product.stock),
+            description: product.description || "",
             image: null,
         });
-        fetchProducts();
+
+        setOpenModal(true);
+    };
+
+    const handleDelete = async (id: string) => {
+        const confirmed = window.confirm(
+            "Are you sure you want to delete this product?"
+        );
+
+        if (!confirmed) return;
+
+        try {
+            setDeleting(id);
+
+            const token = Cookies.get("token");
+
+            if (!token) {
+                throw new Error("Authentication token not found.");
+            }
+
+            await api.delete(`/api/products/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            setProducts((previousProducts) =>
+                previousProducts.filter(
+                    (product) => product._id !== id
+                )
+            );
+        } catch (err: unknown) {
+            let message = "Failed to delete product.";
+
+            if (axios.isAxiosError(err)) {
+                message =
+                    err.response?.data?.message || message;
+            } else if (err instanceof Error) {
+                message = err.message;
+            }
+
+            window.alert(message);
+        } finally {
+            setDeleting(null);
+        }
+    };
+
+    const handleSave = async () => {
+        if (!form.name.trim()) {
+            window.alert("Product name is required.");
+            return;
+        }
+
+        if (!form.price || Number(form.price) < 0) {
+            window.alert("Enter a valid product price.");
+            return;
+        }
+
+        if (!form.category.trim()) {
+            window.alert("Product category is required.");
+            return;
+        }
+
+        if (!form.stock || Number(form.stock) < 0) {
+            window.alert("Enter a valid stock quantity.");
+            return;
+        }
+
+        try {
+            setSaving(true);
+
+            const token = Cookies.get("token");
+
+            if (!token) {
+                throw new Error("Authentication token not found.");
+            }
+
+            const formData = new FormData();
+
+            formData.append("name", form.name.trim());
+            formData.append("price", form.price);
+            formData.append("category", form.category.trim());
+            formData.append("stock", form.stock);
+            formData.append(
+                "description",
+                form.description.trim()
+            );
+
+            if (form.image) {
+                formData.append("image", form.image);
+            }
+
+            if (editing) {
+                await api.put(
+                    `/api/products/${editing}`,
+                    formData,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+            } else {
+                await api.post(
+                    "/api/products",
+                    formData,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+            }
+
+            setOpenModal(false);
+            resetForm();
+
+            await fetchProducts();
+        } catch (err: unknown) {
+            let message = editing
+                ? "Failed to update product."
+                : "Failed to create product.";
+
+            if (axios.isAxiosError(err)) {
+                message =
+                    err.response?.data?.message || message;
+            } else if (err instanceof Error) {
+                message = err.message;
+            }
+
+            window.alert(message);
+        } finally {
+            setSaving(false);
+        }
     };
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="space-y-6 p-6">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold">Products</h1>
+                <div>
+                    <h1 className="text-2xl font-bold">
+                        Products
+                    </h1>
+
+                    <p className="text-sm text-gray-500">
+                        Manage your product inventory.
+                    </p>
+                </div>
+
                 <div className="flex gap-3">
-                    <Button onClick={fetchProducts} variant="outline">
-                        <RefreshCw className="w-4 h-4" />
-                    </Button>
                     <Button
-                        onClick={() => {
-                            setEditing(null);
-                            setForm({
-                                name: "",
-                                price: "",
-                                category: "",
-                                stock: "",
-                                description: "",
-                                image: null,
-                            });
-                            setOpenModal(true);
-                        }}
+                        onClick={() => void fetchProducts()}
+                        variant="outline"
+                        disabled={loading}
+                        aria-label="Refresh products"
                     >
-                        <Plus className="w-4 h-4 mr-1" /> Add Product
+                        <RefreshCw
+                            className={`h-4 w-4 ${loading ? "animate-spin" : ""
+                                }`}
+                        />
+                    </Button>
+
+                    <Button onClick={openCreateModal}>
+                        <Plus className="mr-1 h-4 w-4" />
+                        Add Product
                     </Button>
                 </div>
             </div>
 
             {/* Filters */}
-            <div className="flex gap-4 flex-wrap">
+            <div className="flex flex-wrap gap-4">
                 <div className="relative w-64">
-                    <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+
                     <Input
                         placeholder="Search products..."
                         className="pl-9"
                         value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+                        onChange={(event) =>
+                            setSearch(event.target.value)
+                        }
                     />
                 </div>
-                <Select value={category} onValueChange={setCategory}>
+
+                <Select
+                    value={category}
+                    onValueChange={setCategory}
+                >
                     <SelectTrigger className="w-48">
                         <SelectValue placeholder="All Categories" />
                     </SelectTrigger>
+
                     <SelectContent>
-                        <SelectItem value="furniture">Furniture</SelectItem>
-                        <SelectItem value="Rug">Rug</SelectItem>
+                        <SelectItem value="furniture">
+                            Furniture
+                        </SelectItem>
+
+                        <SelectItem value="Rug">
+                            Rug
+                        </SelectItem>
                     </SelectContent>
                 </Select>
             </div>
 
+            {/* Error */}
+            {error && (
+                <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-4">
+                    <p className="text-sm text-red-600">
+                        {error}
+                    </p>
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void fetchProducts()}
+                    >
+                        Try again
+                    </Button>
+                </div>
+            )}
+
             {/* Table */}
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Price</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Stock</TableHead>
-                        <TableHead>Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {products.map((p: any) => (
-                        <TableRow key={p._id}>
-                            <TableCell>{p.name}</TableCell>
-                            <TableCell>₦{p.price}</TableCell>
-                            <TableCell>{p.category}</TableCell>
-                            <TableCell>{p.stock}</TableCell>
-                            <TableCell className="flex gap-2">
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                        setEditing(p._id);
-                                        setForm({
-                                            name: p.name,
-                                            price: p.price,
-                                            category: p.category,
-                                            stock: p.stock,
-                                            description: p.description || "",
-                                            image: null,
-                                        });
-                                        setOpenModal(true);
-                                    }}
-                                >
-                                    <Edit className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    onClick={() => handleDelete(p._id)}
-                                >
-                                    <Trash className="w-4 h-4" />
-                                </Button>
-                            </TableCell>
+            <div className="overflow-x-auto rounded-lg border">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Price</TableHead>
+                            <TableHead>Category</TableHead>
+                            <TableHead>Stock</TableHead>
+                            <TableHead>Actions</TableHead>
                         </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+                    </TableHeader>
+
+                    <TableBody>
+                        {loading ? (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={5}
+                                    className="py-8 text-center text-gray-500"
+                                >
+                                    Loading products...
+                                </TableCell>
+                            </TableRow>
+                        ) : products.length === 0 ? (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={5}
+                                    className="py-8 text-center text-gray-500"
+                                >
+                                    No products found.
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            products.map((product) => (
+                                <TableRow key={product._id}>
+                                    <TableCell className="font-medium">
+                                        {product.name}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        ₦
+                                        {Number(
+                                            product.price
+                                        ).toLocaleString()}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {product.category}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {product.stock}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        <div className="flex gap-2">
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() =>
+                                                    openEditModal(
+                                                        product
+                                                    )
+                                                }
+                                                aria-label={`Edit ${product.name}`}
+                                            >
+                                                <Edit className="h-4 w-4" />
+                                            </Button>
+
+                                            <Button
+                                                size="sm"
+                                                variant="destructive"
+                                                disabled={
+                                                    deleting ===
+                                                    product._id
+                                                }
+                                                onClick={() =>
+                                                    void handleDelete(
+                                                        product._id
+                                                    )
+                                                }
+                                                aria-label={`Delete ${product.name}`}
+                                            >
+                                                <Trash className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
 
             {/* Add/Edit Modal */}
-            <Dialog open={openModal} onOpenChange={setOpenModal}>
+            <Dialog
+                open={openModal}
+                onOpenChange={(open) => {
+                    setOpenModal(open);
+
+                    if (!open) {
+                        resetForm();
+                    }
+                }}
+            >
                 <DialogContent className="max-w-md">
                     <DialogHeader>
-                        <DialogTitle>{editing ? "Edit Product" : "Add Product"}</DialogTitle>
+                        <DialogTitle>
+                            {editing
+                                ? "Edit Product"
+                                : "Add Product"}
+                        </DialogTitle>
                     </DialogHeader>
 
                     <div className="space-y-4">
                         <Input
                             placeholder="Name"
                             value={form.name}
-                            onChange={(e) => setForm({ ...form, name: e.target.value })}
-                        />
-                        <Input
-                            placeholder="Price"
-                            type="number"
-                            value={form.price}
-                            onChange={(e) => setForm({ ...form, price: e.target.value })}
-                        />
-                        <Input
-                            placeholder="Category"
-                            value={form.category}
-                            onChange={(e) => setForm({ ...form, category: e.target.value })}
-                        />
-                        <Input
-                            placeholder="Stock"
-                            type="number"
-                            value={form.stock}
-                            onChange={(e) => setForm({ ...form, stock: e.target.value })}
-                        />
-                        <Input
-                            placeholder="Description"
-                            value={form.description}
-                            onChange={(e) => setForm({ ...form, description: e.target.value })}
-                        />
-                        <Input
-                            type="file"
-                            onChange={(e) =>
-                                setForm({ ...form, image: e.target.files?.[0] || null })
+                            onChange={(event) =>
+                                setForm({
+                                    ...form,
+                                    name: event.target.value,
+                                })
                             }
                         />
 
-                        <Button onClick={handleSave} className="w-full">
-                            {editing ? "Update" : "Create"}
+                        <Input
+                            placeholder="Price"
+                            type="number"
+                            min="0"
+                            value={form.price}
+                            onChange={(event) =>
+                                setForm({
+                                    ...form,
+                                    price: event.target.value,
+                                })
+                            }
+                        />
+
+                        <Input
+                            placeholder="Category"
+                            value={form.category}
+                            onChange={(event) =>
+                                setForm({
+                                    ...form,
+                                    category: event.target.value,
+                                })
+                            }
+                        />
+
+                        <Input
+                            placeholder="Stock"
+                            type="number"
+                            min="0"
+                            value={form.stock}
+                            onChange={(event) =>
+                                setForm({
+                                    ...form,
+                                    stock: event.target.value,
+                                })
+                            }
+                        />
+
+                        <Input
+                            placeholder="Description"
+                            value={form.description}
+                            onChange={(event) =>
+                                setForm({
+                                    ...form,
+                                    description:
+                                        event.target.value,
+                                })
+                            }
+                        />
+
+                        <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={(event) =>
+                                setForm({
+                                    ...form,
+                                    image:
+                                        event.target.files?.[0] ||
+                                        null,
+                                })
+                            }
+                        />
+
+                        <Button
+                            onClick={() => void handleSave()}
+                            className="w-full"
+                            disabled={saving}
+                        >
+                            {saving
+                                ? editing
+                                    ? "Updating..."
+                                    : "Creating..."
+                                : editing
+                                    ? "Update Product"
+                                    : "Create Product"}
                         </Button>
                     </div>
                 </DialogContent>
