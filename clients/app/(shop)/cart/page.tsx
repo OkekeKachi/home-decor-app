@@ -6,8 +6,7 @@ import { useRouter } from "next/navigation";
 import api from "@/utils/axios";
 import Link from "next/link";
 import Cookies from "js-cookie";
-import {
-    ShoppingCart,
+import {    
     Plus,
     Minus,
     Trash2,

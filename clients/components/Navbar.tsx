@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useAuth } from "../app/context/AuthContext";
 import { useCart } from "../app/context/CartContext";
 import {
-    ShoppingBag,
+    ShoppingCart,
     User,
     LogOut,
     Package,
@@ -62,7 +62,7 @@ export default function Navbar() {
                                 aria-label={`Cart with ${totalItems} items`}
                                 className="relative group p-2 hover:bg-[#183C32]/5 rounded transition-colors duration-200"
                             >
-                                <ShoppingBag className="w-5 h-5 text-[#1C1C1C] group-hover:text-[#183C32] transition-colors duration-200" />
+                                <ShoppingCart className="w-5 h-5 text-[#1C1C1C] group-hover:text-[#183C32] transition-colors duration-200" />
 
                                 {totalItems > 0 && (
                                     <span className="absolute -top-0.5 -right-0.5 bg-[#183C32] text-white text-[10px] font-medium rounded-full w-4 h-4 flex items-center justify-center">

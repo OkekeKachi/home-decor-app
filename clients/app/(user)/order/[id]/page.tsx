@@ -7,7 +7,6 @@ import Cookies from "js-cookie";
 import {
     ArrowLeft,
     Package,
-    Calendar,
     CreditCard,
     MapPin,
     CheckCircle,
@@ -17,6 +16,7 @@ import {
     Loader2,
     ShoppingBag
 } from "lucide-react";
+import Image from "next/image";
 
 export default function OrderDetails() {
     const { id } = useParams();
@@ -192,7 +192,7 @@ export default function OrderDetails() {
                                         {/* Product Image Placeholder */}
                                         <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
                                             {item.product?.image ? (
-                                                <img
+                                                <Image
                                                     src={item.product.image}
                                                     alt={item.product.name}
                                                     className="w-full h-full object-cover rounded-lg"

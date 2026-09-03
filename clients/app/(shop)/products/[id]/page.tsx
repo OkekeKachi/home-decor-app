@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import api from "@/utils/axios";
 import { useCart } from "../../../context/CartContext";
 import {
@@ -194,10 +195,11 @@ export default function ProductDetail() {
                     <div className="relative  border border-[#8B6F47]/10 rounded-sm overflow-hidden group">
                         <div className="aspect-[4/3] w-full ">
                             {product.imageUrl && !imageError ? (
-                                <img
+                                <Image
                                     src={product.imageUrl}
                                     alt={product.name}
-                                    className="w-full h-full object-contain transition-transform duration-700 ease-out group-hover:scale-105"
+                                    fill
+                                    className="object-contain transition-transform duration-700 ease-out group-hover:scale-105"
                                     onError={() => setImageError(true)}
                                 />
                             ) : (
