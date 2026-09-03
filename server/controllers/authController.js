@@ -19,7 +19,9 @@ const generateToken = (id) => {
 
 const sendVerificationEmail = async (user, token) => {
     const transporter = nodemailer.createTransport({
-        service: "Gmail",
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS,
@@ -169,7 +171,9 @@ export const registerUser = asyncHandler(async (req, res) => {
         throw err;
     }
     const transporter = nodemailer.createTransport({
-        service: "Gmail",
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS,
@@ -299,7 +303,9 @@ export const forgotPassword = asyncHandler(async (req, res) => {
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
 
     const transporter = nodemailer.createTransport({
-        service: "Gmail",
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS,
