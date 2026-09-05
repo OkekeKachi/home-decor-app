@@ -22,6 +22,8 @@ import {
     User,
     Check
 } from "lucide-react";
+import Image from "next/image";
+
 
 type Review = {
     _id: string;
@@ -195,7 +197,7 @@ export default function ProductDetail() {
                     <div className="relative  border border-[#8B6F47]/10 rounded-sm overflow-hidden group">
                         <div className="aspect-[4/3] w-full ">
                             {product.imageUrl && !imageError ? (
-                                <img
+                                <Image
                                     src={product.imageUrl}
                                     alt={product.name}
                                     fill
