@@ -23,7 +23,7 @@ import {
   Search,
   X
 } from "lucide-react";
-import Image from "next/image";
+
 
 export default function OrdersPage() {
   const router = useRouter();
@@ -320,7 +320,7 @@ export default function OrdersPage() {
                     <div key={item._id} className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 bg-[#F7F3ED] border border-[#8B6F47]/10 rounded-sm">
                       <div className="flex-shrink-0 w-20 h-20 bg-white border border-[#8B6F47]/10 rounded-sm flex items-center justify-center overflow-hidden">
                         {item.product.imageUrl ? (
-                          <Image
+                          <img
                             src={item.product.imageUrl}
                             alt={item.product.name}
                             className="w-full h-full object-cover"

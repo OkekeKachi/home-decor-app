@@ -1,6 +1,6 @@
 import { Heart, ShoppingCart, Eye } from "lucide-react";
 import { useState } from "react";
-import Image from "next/image";
+
 
 interface ProductCardProps {
     product: {
@@ -39,7 +39,7 @@ export default function ProductCard({ product, onAddToCart, onViewProduct }: Pro
             {/* Image Container */}
             <div className="relative aspect-[4/5] overflow-hidden bg-[#F7F3ED] rounded-t-sm">
                 {product.imageUrl && !imageError ? (
-                    <Image
+                    <img
                         src={product.imageUrl}
                         alt={product.name}
                         className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"

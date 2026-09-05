@@ -6,7 +6,7 @@ import {
   Truck,
   ArrowRight,
 } from "lucide-react";
-import Image from "next/image";
+
 
 /**
  * LuxHome — About page
@@ -154,7 +154,7 @@ function Hero() {
 
           <div className="lg:col-span-7">
             <div className="aspect-[4/3] lg:aspect-[16/11]">
-              <Image
+              <img
                 src="https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=1400&q=80"
                 alt="A warm, editorial-styled living room"
                 className="w-full h-full object-cover"
@@ -176,7 +176,7 @@ function OurStory() {
     <section className="container mx-auto px-8 py-20 lg:py-24">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
         <div className="lg:order-2 aspect-[4/5] lg:aspect-[5/6]">
-          <Image
+          <img
             src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1100&q=80"
             alt="A carefully styled corner of a home"
             className="w-full h-full object-cover"
@@ -310,7 +310,7 @@ function OurCollection() {
             href={category.href}
             className="group relative block aspect-[3/4] overflow-hidden"
           >
-            <Image
+            <img
               src={category.image}
               alt={category.name}
               className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
@@ -345,7 +345,7 @@ function OurTeam() {
         {TEAM.map((member) => (
           <div key={member.name}>
             <div className="aspect-[4/5] overflow-hidden">
-              <Image
+              <img
                 src={member.image}
                 alt={member.name}
                 className="w-full h-full object-cover"
@@ -375,7 +375,7 @@ function BrandStatement() {
   return (
     <section className="relative">
       <div className="relative h-[420px] lg:h-[480px]">
-        <Image
+        <img
           src="https://images.unsplash.com/photo-1615529182904-14819c35db37?auto=format&fit=crop&w=1800&q=80"
           alt="A quiet, thoughtfully furnished interior"
           className="w-full h-full object-cover"

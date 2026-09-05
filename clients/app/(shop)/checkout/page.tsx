@@ -21,7 +21,7 @@ import {
     Home
 } from "lucide-react";
 import { toast } from "react-hot-toast";
-import Image from "next/image";
+
 
 export default function CheckoutPage() {
     const { cart, totalPrice, clearCart } = useCart();
@@ -460,7 +460,7 @@ export default function CheckoutPage() {
                                     <div key={item.product._id} className="flex items-center space-x-3">
                                         <div className="flex-shrink-0 w-12 h-12 bg-[#FAF9F6] border border-[#EEEAE2] rounded-sm flex items-center justify-center overflow-hidden">
                                             {item.product.imageUrl ? (
-                                                <Image
+                                                <img
                                                     src={item.product.imageUrl}
                                                     alt={item.product.name}
                                                     className="w-full h-full object-cover"

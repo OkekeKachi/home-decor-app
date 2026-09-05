@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import api from "@/utils/axios";
 import axios from "axios";
-import Image from "next/image";
+
 
 interface Product {
   _id: string;
@@ -173,7 +173,7 @@ function Hero() {
 
           <div className="lg:col-span-7">
             <div className="relative aspect-[4/3] lg:aspect-[16/11]">
-              <Image
+              <img
                 src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1400&q=80"
                 alt="A sunlit living room styled with warm, natural furniture"
                 className="w-full h-full object-cover"
@@ -216,7 +216,7 @@ function CategorySection() {
             href={category.href}
             className="group relative block aspect-[3/4] overflow-hidden"
           >
-            <Image
+            <img
               src={category.image}
               alt={category.name}
               className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
@@ -292,7 +292,7 @@ function ProductCard({ product }: { product: Product }) {
     <div className="group bg-white border border-[#8B6F47]/12">
       <div className="relative aspect-square overflow-hidden">
         <Link href={`/products/${product._id}`}>
-          <Image
+          <img
             src={product.imageUrl}
             alt={product.name}
             className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
@@ -343,7 +343,7 @@ function EditorialSection() {
     <section className="container mx-auto px-8 py-20 lg:py-24">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
         <div className="aspect-[4/5] lg:aspect-[5/6]">
-          <Image
+          <img
             src="https://images.unsplash.com/photo-1616137466211-f939a420be84?auto=format&fit=crop&w=1100&q=80"
             alt="A warm, textured interior styled with natural materials"
             className="w-full h-full object-cover"
@@ -413,7 +413,7 @@ function VisualBreak() {
   return (
     <section className="relative">
       <div className="relative h-[420px] lg:h-[480px]">
-        <Image
+        <img
           src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1800&q=80"
           alt="A minimalist room bathed in afternoon light"
           className="w-full h-full object-cover"

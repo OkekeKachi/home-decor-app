@@ -4,7 +4,29 @@ import asyncHandler from "../middleware/asyncHandler.js";
 import { getDelay } from "../utils/Security.js";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
-import { log } from "console";
+
+
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        type: "OAuth2",
+        user: process.env.GMAIL_USER,
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
+    },
+});
+
+transporter.verify((error, success) => {
+    if (error) {
+        console.error("Gmail OAuth2 connection failed:", error);
+    } else {
+        console.log("Gmail OAuth2 connection successful!");
+    }
+});
+
+
+
 
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "1d" });
@@ -18,47 +40,51 @@ const generateToken = (id) => {
 // @access  Public
 
 const sendVerificationEmail = async (user, token) => {
-    const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 465,
-        secure: true,
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
-    });
-
     const verificationUrl =
         `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
 
-    const mailOptions = {
-        from: `"Luxe Home" <${process.env.EMAIL_USER}>`,
+    const info = await transporter.sendMail({
+        from: `"Luxe Home" <${process.env.GMAIL_USER}>`,
         to: user.email,
         subject: "Verify your email for Luxe Home",
         html: `
-            <p>Hi ${user.firstName || user.username},</p>
+            <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+                <p>Hi ${user.firstName || user.username},</p>
 
-            <p>Thanks for registering! Click below to verify your email:</p>
+                <p>Thanks for registering with Luxe Home!</p>
 
-            <a
-                href="${verificationUrl}"
-                style="
-                    background: #f59e0b;
-                    color: #fff;
-                    padding: 10px 20px;
-                    border-radius: 6px;
-                    text-decoration: none;
-                "
-            >
-                Verify Email
-            </a>
+                <p>Please click the button below to verify your email:</p>
 
-            <p>This link expires in 1 hour.</p>
+                <a
+                    href="${verificationUrl}"
+                    style="
+                        display: inline-block;
+                        background: #f59e0b;
+                        color: #fff;
+                        padding: 12px 24px;
+                        border-radius: 6px;
+                        text-decoration: none;
+                        font-weight: bold;
+                    "
+                >
+                    Verify Email
+                </a>
+
+                <p>This verification link expires in 1 hour.</p>
+
+                <p>
+                    If you didn't create this account, you can ignore this email.
+                </p>
+            </div>
         `,
-    };
+    });
 
-    await transporter.sendMail(mailOptions);
+    console.log("Verification email sent:", info.messageId);
+
+    return info;
 };
+
+
 export const login = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
@@ -170,36 +196,13 @@ export const registerUser = asyncHandler(async (req, res) => {
         }
         throw err;
     }
-    const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 465,
-        secure: true,
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
-        logger: true,
-        debug: true
+    await sendVerificationEmail(newUser, token);
+
+    res.status(201).json({
+        message: "User registered successfully"
     });
 
-
     
-    
-    const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
-    const mailOptions = {
-        from: `"Luxe Home" <${process.env.EMAIL_USER}>`,
-        to: newUser.email,
-        subject: "Verify your email for Luxe Home",
-        html: `
-      <p>Hi ${username},</p>
-      <p>Thanks for registering! Click below to verify your email:</p>
-      <a href="${verificationUrl}" style="background: #f59e0b; color: #fff; padding: 10px 20px; border-radius: 6px; text-decoration: none;">Verify Email</a>
-      <p>This link expires in 24 hours.</p>
-    `,
-    };
-    await transporter.sendMail(mailOptions);
-
-    res.status(201).json({ message: "User registered successfully" });
 });
 
 
@@ -283,8 +286,8 @@ export const forgotPassword = asyncHandler(async (req, res) => {
 
     const user = await User.findOne({ email });
 
+    // Anti-enumeration
     if (!user) {
-        // anti-enumeration
         return res.json({
             message: "If an account exists, a reset link has been sent.",
         });
@@ -297,39 +300,57 @@ export const forgotPassword = asyncHandler(async (req, res) => {
         .update(token)
         .digest("hex");
 
-    user.resetPasswordExpiry = Date.now() + 15 * 60 * 1000; // 15 mins
+    user.resetPasswordExpiry = Date.now() + 15 * 60 * 1000;
+
     await user.save();
 
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+    const resetUrl =
+        `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
 
-    const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 465,
-        secure: true,
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
-        logger: true,
-        debug: true
+    const info = await transporter.sendMail({
+        from: `"Luxe Home" <${process.env.GMAIL_USER}>`,
+        to: user.email,
+        subject: "Reset your Luxe Home password",
+        html: `
+            <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+                <h2>Password Reset</h2>
+
+                <p>
+                    You requested a password reset for your Luxe Home account.
+                </p>
+
+                <p>
+                    Click the button below to create a new password:
+                </p>
+
+                <a
+                    href="${resetUrl}"
+                    style="
+                        display: inline-block;
+                        background: #f59e0b;
+                        color: #fff;
+                        padding: 12px 24px;
+                        border-radius: 6px;
+                        text-decoration: none;
+                        font-weight: bold;
+                    "
+                >
+                    Reset Password
+                </a>
+
+                <p>This link expires in 15 minutes.</p>
+
+                <p>
+                    If you didn't request a password reset, you can safely
+                    ignore this email.
+                </p>
+            </div>
+        `,
     });
 
-    const mailOptions = {
-        from: `"Luxe Home" <${process.env.EMAIL_USER}>`,
-        to: user.email,
-        subject: "Reset your password",
-        html: `
-      <p>You requested a password reset.</p> 
-      <a href="${resetUrl}">Reset Password</a>
-      <p>This link expires in 15 minutes.</p>
-    `, 
-    };
-    console.log(user.email);
-    
-    await transporter.sendMail(mailOptions);
+    console.log("Password reset email sent:", info.messageId);
 
-
-    res.json({
+    return res.json({
         message: "If an account exists, a reset link has been sent.",
     });
 });
