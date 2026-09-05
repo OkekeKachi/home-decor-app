@@ -4,26 +4,31 @@ import asyncHandler from "../middleware/asyncHandler.js";
 import { getDelay } from "../utils/Security.js";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
+import { BrevoClient } from "@getbrevo/brevo";
 
-
-const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        type: "OAuth2",
-        user: process.env.GMAIL_USER,
-        clientId: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
-    },
+const brevo = new BrevoClient({
+    apiKey: process.env.BREVO_API_KEY,
 });
 
-transporter.verify((error, success) => {
-    if (error) {
-        console.error("Gmail OAuth2 connection failed:", error);
-    } else {
-        console.log("Gmail OAuth2 connection successful!");
-    }
-});
+
+// const transporter = nodemailer.createTransport({
+//     service: "gmail",
+//     auth: {
+//         type: "OAuth2",
+//         user: process.env.GMAIL_USER,
+//         clientId: process.env.GOOGLE_CLIENT_ID,
+//         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+//         refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
+//     },
+// });
+
+// transporter.verify((error, success) => {
+//     if (error) {
+//         console.error("Gmail OAuth2 connection failed:", error);
+//     } else {
+//         console.log("Gmail OAuth2 connection successful!");
+//     }
+// });
 
 
 
@@ -43,11 +48,19 @@ const sendVerificationEmail = async (user, token) => {
     const verificationUrl =
         `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
 
-    const info = await transporter.sendMail({
-        from: `"Luxe Home" <${process.env.GMAIL_USER}>`,
-        to: user.email,
+    const result = await brevo.transactionalEmails.sendTransacEmail({
+        sender: {
+            name: "Luxe Home",
+            email: process.env.GMAIL_USER,
+        },
+        to: [
+            {
+                email: user.email,
+                name: user.firstName || user.username,
+            },
+        ],
         subject: "Verify your email for Luxe Home",
-        html: `
+        htmlContent: `
             <div style="font-family: Arial, sans-serif; line-height: 1.6;">
                 <p>Hi ${user.firstName || user.username},</p>
 
@@ -79,9 +92,9 @@ const sendVerificationEmail = async (user, token) => {
         `,
     });
 
-    console.log("Verification email sent:", info.messageId);
+    console.log("Verification email sent:", result.messageId);
 
-    return info;
+    return result;
 };
 
 
@@ -307,11 +320,19 @@ export const forgotPassword = asyncHandler(async (req, res) => {
     const resetUrl =
         `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
 
-    const info = await transporter.sendMail({
-        from: `"Luxe Home" <${process.env.GMAIL_USER}>`,
-        to: user.email,
+    const result = await brevo.transactionalEmails.sendTransacEmail({
+        sender: {
+            name: "Luxe Home",
+            email: process.env.GMAIL_USER,
+        },
+        to: [
+            {
+                email: user.email,
+                name: user.firstName || user.username,
+            },
+        ],
         subject: "Reset your Luxe Home password",
-        html: `
+        htmlContent: `
             <div style="font-family: Arial, sans-serif; line-height: 1.6;">
                 <h2>Password Reset</h2>
 
@@ -348,7 +369,7 @@ export const forgotPassword = asyncHandler(async (req, res) => {
         `,
     });
 
-    console.log("Password reset email sent:", info.messageId);
+    console.log("Password reset email sent:", result.messageId);
 
     return res.json({
         message: "If an account exists, a reset link has been sent.",

@@ -24,6 +24,8 @@ import adminRoutes from "./routes/adminRoutes.js";
 const app = express();
 connectDB();
 
+app.set("trust proxy", 1);
+
 // Global middlewares
 app.use(helmet());
 app.use(
