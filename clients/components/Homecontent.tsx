@@ -37,21 +37,21 @@ const CATEGORIES = [
   {
     id: "furniture",
     name: "Furniture",
-    href: "/products?category=furniture",
+    href: "/products?category=Furniture",
     image:
       "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=900&q=80",
   },
   {
     id: "textiles",
     name: "Textiles",
-    href: "/products?category=textiles",
+    href: "/products?category=Textiles",
     image:
       "https://images.unsplash.com/photo-1615873968403-89e068629265?auto=format&fit=crop&w=900&q=80",
   },
   {
     id: "lighting",
     name: "Lighting",
-    href: "/products?category=lighting",
+    href: "/products?category=Lighting",
     image:
       "https://images.unsplash.com/photo-1540932239986-30128078f3c5?auto=format&fit=crop&w=900&q=80",
   },
@@ -321,18 +321,7 @@ function ProductCard({ product }: { product: Product }) {
           {product.name}
         </h3>
 
-        <div className="mt-2.5 flex items-center justify-between">
-          <span className="font-serif text-[#183C32] text-lg">
-            ₦{product.price.toLocaleString()}
-          </span>
-
-          <button
-            type="button"
-            className="text-xs font-medium tracking-wide text-white bg-[#183C32] px-3.5 py-2 hover:bg-[#183C32]/90 transition-colors duration-200"
-          >
-            Add to Cart
-          </button>
-        </div>
+        <div className="mt-2.5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"> <span className="font-serif text-[#183C32] text-base sm:text-lg"> ₦{product.price.toLocaleString()} </span> <button type="button" className="w-full sm:w-auto text-xs font-medium tracking-wide text-white bg-[#183C32] px-3.5 py-2.5 sm:py-2 hover:bg-[#183C32]/90 transition-colors duration-200" > Add to Cart </button> </div>
       </div>
     </div>
   );

@@ -360,14 +360,14 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    <div className="bg-white border border-[#8B6F47]/10 rounded-sm p-5">
-                        <div className="flex items-start space-x-4">
+                    <div className="bg-white border border-[#8B6F47]/10 rounded-sm p-4 sm:p-5">
+                        <div className="flex items-start gap-3 sm:gap-4">
                             <div className="w-10 h-10 bg-[#F7F3ED] border border-[#8B6F47]/10 rounded-sm flex items-center justify-center flex-shrink-0">
                                 <TrendingUp className="w-5 h-5 text-[#8B6F47]" />
                             </div>
 
-                            <div>
-                                <p className="text-2xl font-serif text-[#1C1C1C]">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xl sm:text-2xl font-serif text-[#1C1C1C] break-words">
                                     ₦{stats.totalSpent.toLocaleString()}
                                 </p>
 
