@@ -15,6 +15,7 @@ export default function ProductsContent() {
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [loadMoreError, setLoadMoreError] = useState(false); // NEW: Separate state for pagination errors
     const [showFilters, setShowFilters] = useState(false);
 
     // Filters
@@ -29,11 +30,19 @@ export default function ProductsContent() {
     const loader = useRef<HTMLDivElement | null>(null);
 
     const fetchProducts = async (filters: any = {}, append = false) => {
+        // Prevent duplicate requests if a fetch is already in progress
+        if (append && loading) return;
+
+        setLoading(true);
+
+        // Clear load-more error when starting a fresh initial fetch
+        if (!append) {
+            setLoadMoreError(false);
+        }
+
+        const { keyword, category, minPrice, maxPrice, page } = filters;
+
         try {
-            setLoading(true);
-
-            const { keyword, category, minPrice, maxPrice, page } = filters;
-
             const res = await api.get(`/api/products`, {
                 params: {
                     keyword,
@@ -48,11 +57,15 @@ export default function ProductsContent() {
             setProducts((prev) =>
                 append ? [...prev, ...res.data.data] : res.data.data
             );
-            console.log(res.data.pages);
-
             setPages(res.data.pages);
+            setLoadMoreError(false); // Clear error on successful fetch
         } catch (err: any) {
-            setError(err.response?.data?.message || "Failed to fetch products");
+            // Differentiate between initial fetch failure and load-more failure
+            if (!append) {
+                setError(err.response?.data?.message || "Failed to fetch products");
+            } else {
+                setLoadMoreError(true);
+            }
         } finally {
             setLoading(false);
         }
@@ -61,15 +74,14 @@ export default function ProductsContent() {
     // Debounced search
     const debouncedSearch = useCallback(
         debounce((query: string) => {
-            fetchProducts({ keyword: query, category, minPrice, maxPrice, page: 1 });
             setPage(1);
+            fetchProducts({ keyword: query, category, minPrice, maxPrice, page: 1 });
         }, 500),
         [category, minPrice, maxPrice]
     );
 
     useEffect(() => {
         setPage(1);
-
         fetchProducts({
             keyword: search,
             category,
@@ -88,7 +100,8 @@ export default function ProductsContent() {
         if (!loader.current) return;
         const observer = new IntersectionObserver(
             (entries) => {
-                if (entries[0].isIntersecting && page < pages && !loading) {
+                // Only trigger if we haven't reached the end, aren't already loading, and don't have a pending error
+                if (entries[0].isIntersecting && page < pages && !loading && !loadMoreError) {
                     const nextPage = page + 1;
                     setPage(nextPage);
                     fetchProducts(
@@ -102,7 +115,7 @@ export default function ProductsContent() {
 
         observer.observe(loader.current);
         return () => observer.disconnect();
-    }, [page, pages, loading, search, category, minPrice, maxPrice]);
+    }, [page, pages, loading, search, category, minPrice, maxPrice, loadMoreError]);
 
     const handleAddToCart = (productId: string) => {
         addToCart(productId);
@@ -114,6 +127,7 @@ export default function ProductsContent() {
 
     const activeFilterCount = [category, minPrice > 0, maxPrice < 10000000].filter(Boolean).length;
 
+    // Full-page error only triggers if the INITIAL fetch fails (products array is empty)
     if (error) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[#F7F3ED] px-4 sm:px-6">
@@ -266,6 +280,27 @@ export default function ProductsContent() {
                                 />
                             </div>
                         ))}
+                    </div>
+                )}
+
+                {/* Load More Error Indicator */}
+                {loadMoreError && (
+                    <div className="flex flex-col items-center justify-center py-8 sm:py-12">
+                        <p className="text-[#1C1C1C]/60 text-sm mb-4 text-center">
+                            Unable to load more products.
+                        </p>
+                        <button
+                            onClick={() => {
+                                setLoadMoreError(false);
+                                fetchProducts(
+                                    { keyword: search, category, minPrice, maxPrice, page },
+                                    true
+                                );
+                            }}
+                            className="px-5 py-2.5 bg-[#183C32] text-white text-sm font-medium tracking-wide rounded-sm hover:bg-[#183C32]/90 transition-colors duration-200"
+                        >
+                            Try Again
+                        </button>
                     </div>
                 )}
 

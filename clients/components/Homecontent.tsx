@@ -12,15 +12,22 @@ import {
   ArrowRight,
 } from "lucide-react";
 import api from "@/utils/axios";
+import ProductCard from "./ProductCard";
 import axios from "axios";
+import { useCart } from "../app/context/CartContext";
+import { useRouter } from "next/navigation";
+
 
 
 interface Product {
   _id: string;
   name: string;
   price: number;
-  imageUrl: string;
-  rating?: number;
+  category: string;
+  stock: number;
+  imageUrl?: string;
+  description?: string;
+  averageRating?: number;
 }
 
 interface ProductsResponse {
@@ -55,13 +62,6 @@ const CATEGORIES = [
     image:
       "https://images.unsplash.com/photo-1540932239986-30128078f3c5?auto=format&fit=crop&w=900&q=80",
   },
-  {
-    id: "home-decor",
-    name: "Home Decor",
-    href: "/products?category=home-decor",
-    image:
-      "https://images.unsplash.com/photo-1616627988026-4f5e5e7f6a6a?auto=format&fit=crop&w=900&q=80",
-  },
 ];
 
 const BENEFITS = [
@@ -91,7 +91,7 @@ export default function HomeContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
+  
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -121,7 +121,7 @@ export default function HomeContent() {
 
     fetchProducts();
   }, []);
-
+  
   return (
     <main className="bg-[#F7F3ED]">
       <Hero />
@@ -246,6 +246,16 @@ function FeaturedProducts({
   loading,
   error,
 }: FeaturedProductsProps) {
+  const { addToCart } = useCart();
+  const router = useRouter();
+
+  const handleAddToCart = (productId: string) => {
+    addToCart(productId);
+  };
+
+  const handleViewProduct = (productId: string) => {
+    router.push(`/products/${productId}`);
+  };
   return (
     <section className="container mx-auto px-8 py-20 lg:py-24">
       <div className="max-w-xl">
@@ -279,7 +289,13 @@ function FeaturedProducts({
       {!loading && !error && products.length > 0 && (
         <div className="mt-12 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 lg:gap-6">
           {products.map((product) => (
-            <ProductCard key={product._id} product={product} />
+            <div key={product._id} className="min-w-0">
+              <ProductCard
+                product={product}
+                onAddToCart={handleAddToCart}
+                onViewProduct={handleViewProduct}
+              />
+            </div>
           ))}
         </div>
       )}
@@ -287,45 +303,45 @@ function FeaturedProducts({
   );
 }
 
-function ProductCard({ product }: { product: Product }) {
-  return (
-    <div className="group bg-white border border-[#8B6F47]/12">
-      <div className="relative aspect-square overflow-hidden">
-        <Link href={`/products/${product._id}`}>
-          <img
-            src={product.imageUrl}
-            alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
-          />
-        </Link>
+// function ProductCard({ product }: { product: Product }) {
+//   return (
+//     <div className="group bg-white border border-[#8B6F47]/12">
+//       <div className="relative aspect-square overflow-hidden">
+//         <Link href={`/products/${product._id}`}>
+//           <img
+//             src={product.imageUrl}
+//             alt={product.name}
+//             className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+//           />
+//         </Link>
 
-        <button
-          type="button"
-          aria-label={`Add ${product.name} to wishlist`}
-          className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-white/90 hover:bg-white transition-colors duration-200"
-        >
-          <Heart className="w-4 h-4 text-[#1C1C1C]" />
-        </button>
-      </div>
+//         <button
+//           type="button"
+//           aria-label={`Add ${product.name} to wishlist`}
+//           className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-white/90 hover:bg-white transition-colors duration-200"
+//         >
+//           <Heart className="w-4 h-4 text-[#1C1C1C]" />
+//         </button>
+//       </div>
 
-      <div className="p-4">
-        <div className="flex items-center gap-1 text-[#C9A66B]">
-          <Star className="w-3.5 h-3.5 fill-[#C9A66B]" />
+//       <div className="p-4">
+//         <div className="flex items-center gap-1 text-[#C9A66B]">
+//           <Star className="w-3.5 h-3.5 fill-[#C9A66B]" />
 
-          <span className="text-xs text-[#1C1C1C]/60">
-            {product.rating ?? "New"}
-          </span>
-        </div>
+//           <span className="text-xs text-[#1C1C1C]/60">
+//             {product.rating ?? "New"}
+//           </span>
+//         </div>
 
-        <h3 className="mt-1.5 text-[#1C1C1C] text-sm font-medium leading-snug">
-          {product.name}
-        </h3>
+//         <h3 className="mt-1.5 text-[#1C1C1C] text-sm font-medium leading-snug">
+//           {product.name}
+//         </h3>
 
-        <div className="mt-2.5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"> <span className="font-serif text-[#183C32] text-base sm:text-lg"> ₦{product.price.toLocaleString()} </span> <button type="button" className="w-full sm:w-auto text-xs font-medium tracking-wide text-white bg-[#183C32] px-3.5 py-2.5 sm:py-2 hover:bg-[#183C32]/90 transition-colors duration-200" > Add to Cart </button> </div>
-      </div>
-    </div>
-  );
-}
+//         <div className="mt-2.5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"> <span className="font-serif text-[#183C32] text-base sm:text-lg"> ₦{product.price.toLocaleString()} </span> <button type="button" className="w-full sm:w-auto text-xs font-medium tracking-wide text-white bg-[#183C32] px-3.5 py-2.5 sm:py-2 hover:bg-[#183C32]/90 transition-colors duration-200" > Add to Cart </button> </div>
+//       </div>
+//     </div>
+//   );
+// }
 
 function EditorialSection() {
   return (
