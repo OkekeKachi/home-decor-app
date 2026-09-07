@@ -25,6 +25,10 @@ export const metadata: Metadata = {
     alternates: {
         canonical: "/",
     },
+    
+    verification: {
+        google: "qo9eJdxD9tTboJ372VSg2HhRgrtdKuSy1JoKIUMS9nI",
+    },
 
     openGraph: {
         title: "LuxHome | Furniture, Lighting & Home Decor",
