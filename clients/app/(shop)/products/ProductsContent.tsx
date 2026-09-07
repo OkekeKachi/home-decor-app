@@ -151,7 +151,9 @@ export default function ProductsContent() {
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
                     <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 sm:gap-6">
                         {/* Title & Results */}
+                                  
                         <div>
+                            <br />                            
                             <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl text-[#1C1C1C]">
                                 <span className="sm:hidden">Collection</span>
                                 <span className="hidden sm:inline">Explore Our Collection</span>

@@ -154,7 +154,9 @@ export default function ProductDetail() {
     return (
         <div className="min-h-screen bg-[#F7F3ED]">
             {/* Breadcrumb & Top Navigation */}
+            
             <div className="bg-[#F7F3ED] border-b border-[#8B6F47]/10">
+                <br />
                 <div className="container mx-auto px-6 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3 text-sm">
