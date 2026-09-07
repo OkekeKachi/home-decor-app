@@ -152,16 +152,11 @@ export default function ProductsContent() {
                     <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 sm:gap-6">
                         {/* Title & Results */}
                                   
-                        <div>
-                            <br />                            
-                            <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl text-[#1C1C1C]">
-                                <span className="sm:hidden">Collection</span>
+                        <div>    
+                            
+                            <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl text-[#1C1C1C]">                                
                                 <span className="hidden sm:inline">Explore Our Collection</span>
-                            </h1>
-                            <p className="mt-1 sm:mt-2 text-[#1C1C1C]/60 text-xs sm:text-sm">
-                                {products.length} piece{products.length !== 1 ? "s" : ""}{" "}
-                                selected for you
-                            </p>
+                            </h1>                            
                         </div>
 
                         {/* Search + Filter */}
