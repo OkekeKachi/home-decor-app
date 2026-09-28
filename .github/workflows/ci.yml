@@ -32,3 +32,6 @@ jobs:
 
       - name: Check Node.js
         run: node --version
+
+      - name: Build Docker image
+        run: docker build -t luxhome-api:ci .
