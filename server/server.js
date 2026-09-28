@@ -71,6 +71,12 @@ app.get("/", (req, res) => {
         message: "Home Decor API is running 🚀",
     });
 });
+app.get("/health", (req, res) => {
+    res.status(200).json({
+        status: "ok",
+        service: "LuxHome API",
+    });
+});
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/users", userRoutes);
