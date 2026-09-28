@@ -1,4 +1,4 @@
-name: LuxHome CI
+name: LuxeHome CI
 
 on:
   push:
@@ -44,4 +44,6 @@ jobs:
         with:
           context: ./server
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/luxhome-api:latest
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/luxehome-api:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/luxehome-api:${{ github.sha }}
